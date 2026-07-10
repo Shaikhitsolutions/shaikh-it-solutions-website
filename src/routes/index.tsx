@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import heroBg from "@/assets/image/hero.png";
 
-import logo from "@/assets/image/Logo.png";
+import logo from "@/assets/image/logo.png";
 import computerRepair from "@/assets/image/computer repair.png";
 import windowsInstallation from "@/assets/image/Windows Installation.png";
 import networking from "@/assets/image/Networking.png";
