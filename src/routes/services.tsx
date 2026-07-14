@@ -27,7 +27,7 @@ export const Route = createFileRoute("/services")({
 const packages = [
   {
     name: "Home & Starter",
-    price: "From ₹499",
+    price: "From",
     desc: "Perfect for home users and small shops",
     features: ["On-call computer & laptop repair", "Windows installation & setup", "Basic networking & WiFi", "Remote support on call"],
   },

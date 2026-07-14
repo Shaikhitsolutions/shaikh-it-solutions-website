@@ -36,5 +36,22 @@ export const features = [
   { icon: ShieldCheck, title: "Service Warranty", desc: "All repairs and installations come with a service warranty." },
 ] as const;
 
+export const products = [
+  {
+    id: "qnt-qkb11",
+    name: "Quantron QKB11 USB Keyboard",
+    image: "https://shaikhitsolutions.netlify.app/favicon.png", // Ya real image path
+    price: "₹249", // Distributor price + aapka margin
+    whatsappUrl: "https://wa.me/917984679052?text=Hi%20Shahid,%20I%20want%20to%20order%20Quantron%20QKB11%20Keyboard"
+  },
+  {
+    id: "qmu-540",
+    name: "Quantron QMU 540 Optical Mouse",
+    image: "https://shaikhitsolutions.netlify.app/favicon.png",
+    price: "₹120", 
+    whatsappUrl: "https://wa.me/917984679052?text=Hi%20Shahid,%20I%20want%20to%20order%20Quantron%20QMU%20540%20Mouse"
+  }
+];
+
 // re-export so existing imports keep working
 export { Monitor, Wrench };
