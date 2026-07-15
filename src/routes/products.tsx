@@ -111,7 +111,7 @@ function Products() {
             <div className="text-center glass-dark max-w-md mx-auto p-12 rounded-2xl border border-white/5 shadow-card-soft">
               <Layers className="h-10 w-10 text-accent/60 mx-auto mb-4 animate-pulse" />
               <h3 className="text-lg font-bold">Category Currently Empty</h3>
-              <p className="text-navy-foreground/60 text-sm mt-2">Is category me stock update hona baki hai dashboard par.</p>
+              <p className="text-navy-foreground/60 text-sm mt-2">Stock updates for this category are pending from the dashboard.</p>
             </div>
           ) : (
             /* Premium Core Card Grid */
