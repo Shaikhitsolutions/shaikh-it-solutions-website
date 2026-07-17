@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { ShoppingBag, MessageCircle, Layers, Loader2 } from "lucide-react";
+import { ShoppingBag, MessageCircle, Layers, Loader2, Link2, Sparkles } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -15,6 +15,11 @@ interface Product {
   retail_price: number;
   description: string;
   image_url: string;
+  is_affiliate?: boolean;
+  amazon_link?: string;
+  flipkart_link?: string;
+  shopsy_link?: string;
+  coupon_code?: string;
 }
 
 function Products() {
@@ -35,7 +40,7 @@ function Products() {
         if (error) throw error;
         if (data) {
           setProducts(data);
-          setFilteredProducts(data);
+          setFilteredProducts(data.filter((p) => !p.is_affiliate));
         }
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -49,9 +54,13 @@ function Products() {
   const handleCategoryFilter = (category: string) => {
     setActiveCategory(category);
     if (category === "All") {
-      setFilteredProducts(products);
+      setFilteredProducts(products.filter((p) => !p.is_affiliate));
+    } else if (category === "Partner Offers") {
+      setFilteredProducts(products.filter((p) => p.is_affiliate));
     } else {
-      const filtered = products.filter((p) => p.category.toLowerCase() === category.toLowerCase());
+      const filtered = products.filter(
+        (p) => p.category.toLowerCase() === category.toLowerCase() && !p.is_affiliate
+      );
       setFilteredProducts(filtered);
     }
   };
@@ -60,8 +69,26 @@ function Products() {
 
   return (
     <SiteLayout>
-      {/* Dynamic Background Layout with Cyber Core Gradient matching Hero Section */}
+      {/* Purana standard screen height grid layer context reset matching your layout */}
       <div className="relative min-h-screen bg-navy text-navy-foreground overflow-hidden pt-36 pb-24">
+        
+        {/* White Sub-Bar line - Positioned slightly higher using top-[64px] framework layout */}
+        <div className="w-full bg-white py-1 px-4 border-b border-black/5 shadow-sm flex justify-center items-center absolute top-[64px] left-0 z-20">
+          <div className="max-w-7xl w-full flex justify-end px-4 sm:px-6 lg:px-8">
+            {/* Custom Interactive Button: White background, Bold Black Text, half mm padded margins */}
+            <button
+              onClick={() => handleCategoryFilter("Partner Offers")}
+              className={`inline-flex items-center gap-1.5 font-bold uppercase tracking-wider transition-all duration-300 shadow-md cursor-pointer rounded-xl border border-black/10 text-xs bg-white text-black hover:bg-black/5
+                ${activeCategory === "Partner Offers" ? "scale-105 ring-2 ring-navy-deep/20" : ""}
+              `}
+              style={{ padding: "10px 18px" }} // Added extra 0.5mm (2px) on all 4 directions for size expansion
+            >
+              <Sparkles className="h-3.5 w-3.5 text-black" />
+              Partner Offers
+            </button>
+          </div>
+        </div>
+
         {/* Glowing animated background blobs from hero identity */}
         <div className="absolute top-0 left-1/4 h-[500px] w-[500px] rounded-full bg-primary-glow/10 blur-3xl animate-blob" aria-hidden />
         <div className="absolute top-1/3 right-1/4 h-[450px] w-[450px] rounded-full bg-accent/10 blur-3xl animate-blob [animation-delay:-4s]" aria-hidden />
@@ -84,7 +111,7 @@ function Products() {
             </p>
           </div>
 
-          {/* Upgraded Filter Buttons matching Glassmorphic Style */}
+          {/* Standard Categories Layout Line */}
           <div className="flex flex-wrap justify-center items-center gap-3 mb-16 border-b border-white/10 pb-8 max-w-4xl mx-auto">
             {fixedCategories.map((cat) => (
               <button
@@ -136,8 +163,14 @@ function Products() {
                           className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                         />
                         <span className="absolute top-4 left-4 text-[9px] font-bold tracking-widest uppercase px-3 py-1 rounded-full glass-dark text-white border border-white/10 shadow-sm">
-                          {item.category}
+                          {item.is_affiliate ? "Partner Offer" : item.category}
                         </span>
+                        
+                        {item.is_affiliate && item.coupon_code && (
+                          <span className="absolute top-4 right-4 text-[9px] font-bold tracking-wider uppercase px-2.5 py-1 rounded-full bg-accent/20 text-accent border border-accent/30 shadow-sm animate-pulse">
+                            Use Code: {item.coupon_code}
+                          </span>
+                        )}
                       </div>
 
                       {/* Content Info Panel */}
@@ -156,18 +189,53 @@ function Products() {
                       </div>
                     </div>
 
-                    {/* Integrated Interactive Action Button matched with Home Theme */}
+                    {/* Conditional Action Button Interface */}
                     <div className="p-6 pt-0">
-                      <a
-                        href={whatsappLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-primary-gradient text-navy-foreground font-semibold shadow-card-soft hover:shadow-glow hover:scale-[1.02] transition-all duration-200 text-xs uppercase tracking-wider"
-                      >
-                        <MessageCircle className="h-4 w-4" />
-                        Order via WhatsApp
-                        <ShoppingBag className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
-                      </a>
+                      {item.is_affiliate ? (
+                        <div className="flex flex-col gap-2 w-full">
+                          {item.amazon_link && (
+                            <a
+                              href={item.amazon_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-2.5 rounded-xl bg-[#FF9900] text-black font-bold flex items-center justify-center gap-1.5 transition-all hover:opacity-90 text-xs uppercase tracking-wider shadow-sm"
+                            >
+                              <Link2 className="h-3.5 w-3.5" /> Buy on Amazon
+                            </a>
+                          )}
+                          {item.flipkart_link && (
+                            <a
+                              href={item.flipkart_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-2.5 rounded-xl bg-[#2874F0] text-white font-bold flex items-center justify-center gap-1.5 transition-all hover:opacity-90 text-xs uppercase tracking-wider shadow-sm"
+                            >
+                              <Link2 className="h-3.5 w-3.5" /> Buy on Flipkart
+                            </a>
+                          )}
+                          {item.shopsy_link && (
+                            <a
+                              href={item.shopsy_link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-full py-2.5 rounded-xl bg-[#E0144C] text-white font-bold flex items-center justify-center gap-1.5 transition-all hover:opacity-90 text-xs uppercase tracking-wider shadow-sm"
+                            >
+                              <Link2 className="h-3.5 w-3.5" /> Buy on Shopsy
+                            </a>
+                          )}
+                        </div>
+                      ) : (
+                        <a
+                          href={whatsappLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group inline-flex items-center justify-center gap-2 w-full py-3.5 rounded-xl bg-primary-gradient text-navy-foreground font-semibold shadow-card-soft hover:shadow-glow hover:scale-[1.02] transition-all duration-200 text-xs uppercase tracking-wider"
+                        >
+                          <MessageCircle className="h-4 w-4" />
+                          Order via WhatsApp
+                          <ShoppingBag className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all duration-200" />
+                        </a>
+                      )}
                     </div>
                   </div>
                 );
@@ -180,3 +248,5 @@ function Products() {
     </SiteLayout>
   );
 }
+
+

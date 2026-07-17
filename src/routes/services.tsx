@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Eye } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { services } from "@/lib/site-data";
 import { PageHero } from "./about";
@@ -58,29 +58,60 @@ function ServicesPage() {
       <section className="py-20 lg:py-24 bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.map((s) => (
-              <div key={s.title} className="group p-7 rounded-2xl border border-border bg-card shadow-card-soft hover:shadow-elegant hover:-translate-y-1 transition-all duration-300">
-                <img
-  src={
-    s.title === "Computer & Laptop Repair"
-      ? computerRepair
-      : s.title === "Windows Installation"
-      ? windowsInstallation
-      : s.title === "Networking & Router Setup"
-      ? networking
-      : s.title === "CCTV Installation"
-      ? cctvInstallation
-      : s.title === "Website Development"
-      ? websiteDevelopment
-      : itSupport
-  }
-  alt={s.title}
-  className="w-full h-52 object-cover rounded-xl mb-5"
-/>
-                <h3 className="text-xl font-bold mb-2">{s.title}</h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
-              </div>
-            ))}
+            {services.map((s) => {
+              // Creating custom clean path parameters tokens matching standard strings
+              const serviceId = 
+                s.title === "Computer & Laptop Repair" ? "computer-repair" :
+                s.title === "Windows Installation" ? "windows-installation" :
+                s.title === "Networking & Router Setup" ? "networking-setup" :
+                s.title === "CCTV Installation" ? "cctv-installation" :
+                s.title === "Website Development" ? "website-development" : "it-support";
+
+              return (
+                <a
+                  key={s.title}
+                  href={`/services/${serviceId}`}
+                  className="group block rounded-2xl border border-border bg-card p-7 shadow-card-soft hover:shadow-elegant hover:-translate-y-1.5 transition-all duration-300 overflow-hidden text-left relative"
+                >
+                  <div className="relative overflow-hidden rounded-xl mb-5 aspect-[4/3] w-full bg-navy-deep/20">
+                    <img
+                      src={
+                        s.title === "Computer & Laptop Repair"
+                          ? computerRepair
+                          : s.title === "Windows Installation"
+                          ? windowsInstallation
+                          : s.title === "Networking & Router Setup"
+                          ? networking
+                          : s.title === "CCTV Installation"
+                          ? cctvInstallation
+                          : s.title === "Website Development"
+                          ? websiteDevelopment
+                          : itSupport
+                      }
+                      alt={s.title}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    
+                    {/* Modern Action Overlay Layer Indicator on Hover */}
+                    <div className="absolute inset-0 bg-navy/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300">
+                      <span className="glass-dark text-xs text-white px-4 py-2 rounded-xl font-bold flex items-center gap-1.5 uppercase tracking-wider border border-white/10 shadow-lg transform translate-y-2 group-hover:translate-y-0 transition-transform duration-300">
+                        <Eye className="h-3.5 w-3.5" /> View Scope & Book
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-xl font-bold group-hover:text-accent transition-colors">
+                      {s.title}
+                    </h3>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
+                  </div>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {s.desc}
+                  </p>
+                </a>
+              );
+            })}
           </div>
         </div>
       </section>

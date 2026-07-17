@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { PlusCircle, UploadCloud, Trash2, Edit2, Layers, Loader2, XCircle } from "lucide-react";
+import { PlusCircle, UploadCloud, Trash2, Edit2, Loader2, XCircle, Link2, ShoppingBag } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { supabase } from "@/lib/supabaseClient";
 
@@ -16,6 +16,12 @@ interface Product {
   retail_price: number;
   description: string;
   image_url: string;
+  // Dynamic Affiliate Fields
+  is_affiliate?: boolean;
+  amazon_link?: string;
+  flipkart_link?: string;
+  shopsy_link?: string;
+  coupon_code?: string;
 }
 
 function AdminPage() {
@@ -34,6 +40,13 @@ function AdminPage() {
 
   const [existingProducts, setExistingProducts] = useState<Product[]>([]);
   const [fetchLoading, setFetchLoading] = useState(true);
+
+  // New Affiliate State Managers
+  const [isAffiliate, setIsAffiliate] = useState(false);
+  const [amazonLink, setAmazonLink] = useState("");
+  const [flipkartLink, setFlipkartLink] = useState("");
+  const [shopsyLink, setShopsyLink] = useState("");
+  const [couponCode, setCouponCode] = useState("");
 
   const fetchAdminProducts = async () => {
     try {
@@ -88,6 +101,13 @@ function AdminPage() {
     setIsEditing(false);
     setEditProductId(null);
     setExistingImageUrl("");
+    
+    // Reset affiliate states
+    setIsAffiliate(false);
+    setAmazonLink("");
+    setFlipkartLink("");
+    setShopsyLink("");
+    setCouponCode("");
   };
 
   const startEditProduct = (item: Product) => {
@@ -101,13 +121,20 @@ function AdminPage() {
     setExistingImageUrl(item.image_url);
     setImagePreview(item.image_url);
     setImageFile(null);
+
+    // Load affiliate metadata if present
+    setIsAffiliate(!!item.is_affiliate);
+    setAmazonLink(item.amazon_link || "");
+    setFlipkartLink(item.flipkart_link || "");
+    setShopsyLink(item.shopsy_link || "");
+    setCouponCode(item.coupon_code || "");
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-
+     setLoading(true);
     try {
       let finalImageUrl = existingImageUrl;
 
@@ -128,22 +155,29 @@ function AdminPage() {
 
         finalImageUrl = urlData.publicUrl;
       } else if (!isEditing && !imageFile) {
-        alert("Bhai, product ki photo upload karna zaroori hai!");
+        alert("please upload product photos!");
         setLoading(false);
         return;
       }
 
+      const productPayload = {
+        name: prodName,
+        category: category,
+        wholesale_price: parseInt(wholesalePrice),
+        retail_price: parseInt(retailPrice),
+        description: description,
+        image_url: finalImageUrl,
+        is_affiliate: isAffiliate,
+        amazon_link: isAffiliate ? amazonLink : null,
+        flipkart_link: isAffiliate ? flipkartLink : null,
+        shopsy_link: isAffiliate ? shopsyLink : null,
+        coupon_code: isAffiliate ? couponCode : null,
+      };
+
       if (isEditing && editProductId) {
         const { error: updateError } = await supabase
           .from('products')
-          .update({
-            name: prodName,
-            category: category,
-            wholesale_price: parseInt(wholesalePrice),
-            retail_price: parseInt(retailPrice),
-            description: description,
-            image_url: finalImageUrl
-          })
+          .update(productPayload)
           .eq('id', editProductId);
 
         if (updateError) throw updateError;
@@ -151,19 +185,10 @@ function AdminPage() {
       } else {
         const { error: dbError } = await supabase
           .from('products')
-          .insert([
-            {
-              name: prodName,
-              category: category,
-              wholesale_price: parseInt(wholesalePrice),
-              retail_price: parseInt(retailPrice),
-              description: description,
-              image_url: finalImageUrl
-            }
-          ]);
+          .insert([productPayload]);
 
         if (dbError) throw dbError;
-        alert(`🎉 Mubarak ho! "${prodName}" successfully add ho gaya.`);
+        alert(`🎉 Congratulations! "${prodName}" successfully added to your inventory.`);
       }
 
       resetFormState();
@@ -218,7 +243,7 @@ function AdminPage() {
               
               <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
                 <h2 className="text-lg font-bold text-white flex items-center gap-2">
-                  <PlusCircle className={`h-5 w-5 ${isEditing ? 'text-accent' : 'text-accent'}`} /> 
+                  <PlusCircle className="h-5 w-5 text-accent" /> 
                   {isEditing ? "Modify Core Properties" : "Register New Peripheral"}
                 </h2>
                 {isEditing && (
@@ -229,6 +254,19 @@ function AdminPage() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-5">
+                {/* Product Type Dropdown Toggle */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1.5">Distribution Channels</label>
+                  <select
+                    value={isAffiliate ? "affiliate" : "normal"}
+                    onChange={(e) => setIsAffiliate(e.target.value === "affiliate")}
+                    className="w-full glass-dark border border-white/10 rounded-xl px-3 py-3 text-white focus:outline-none focus:border-white/20 text-sm"
+                  >
+                    <option value="normal">Normal Product (Local Stock)</option>
+                    <option value="affiliate">Partner Affiliate Product (Amazon, Flipkart, etc.)</option>
+                  </select>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1.5">Product Name</label>
                   <input
@@ -251,6 +289,13 @@ function AdminPage() {
                       <option>Peripherals</option>
                       <option>USB Hub</option>
                       <option>CCTV Systems</option>
+                      <option>Powerbank</option>
+                      <option>Speakers & Headphones</option>
+                      <option>Cooling Pad</option>
+                      <option>Charger</option>
+                      <option>Networking</option>
+                      <option>Accessories</option>
+                      <option>Other</option>
                     </select>
                   </div>
 
@@ -274,6 +319,61 @@ function AdminPage() {
                     />
                   </div>
                 </div>
+
+                {/* Conditional Partner Affiliate Inputs */}
+                {isAffiliate && (
+                  <div className="p-4 rounded-xl border border-accent/20 bg-accent/5 space-y-4 animate-fadeIn">
+                    <h3 className="text-xs font-bold uppercase text-accent tracking-widest flex items-center gap-1.5">
+                      <Link2 className="h-4 w-4" /> Affiliate URL Router Configuration
+                    </h3>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-navy-foreground/80 mb-1">Amazon Link</label>
+                        <input
+                          type="text"
+                          value={amazonLink}
+                          onChange={(e) => setAmazonLink(e.target.value)}
+                          placeholder="https://amazon.in/dp/..."
+                          className="w-full glass-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-navy-foreground/80 mb-1">Flipkart Link</label>
+                        <input
+                          type="text"
+                          value={flipkartLink}
+                          onChange={(e) => setFlipkartLink(e.target.value)}
+                          placeholder="https://flipkart.com/..."
+                          className="w-full glass-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[11px] font-bold text-navy-foreground/80 mb-1">Shopsy/Meesho Link</label>
+                        <input
+                          type="text"
+                          value={shopsyLink}
+                          onChange={(e) => setShopsyLink(e.target.value)}
+                          placeholder="https://shopsy.in/..."
+                          className="w-full glass-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[11px] font-bold text-navy-foreground/80 mb-1">Exclusive Coupon Code</label>
+                        <input
+                          type="text"
+                          value={couponCode}
+                          onChange={(e) => setCouponCode(e.target.value)}
+                          placeholder="e.g. SHAIKHIT05"
+                          className="w-full glass-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1.5">Short Description</label>
@@ -335,7 +435,14 @@ function AdminPage() {
                     <div className="flex items-center gap-4">
                       <img src={item.image_url} alt={item.name} className="w-12 h-12 object-contain bg-navy/80 rounded-lg p-1.5 border border-white/5 shadow-inner" />
                       <div>
-                        <h4 className="text-sm font-bold text-white line-clamp-1">{item.name}</h4>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-sm font-bold text-white line-clamp-1">{item.name}</h4>
+                          {item.is_affiliate && (
+                            <span className="flex items-center text-[9px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20 uppercase tracking-wider gap-0.5">
+                              <ShoppingBag className="h-2.5 w-2.5" /> Partner
+                            </span>
+                          )}
+                        </div>
                         <p className="text-[11px] text-navy-foreground/70 font-medium tracking-wide mt-0.5">
                           {item.category} • Cost: <span className="text-white/60">₹{item.wholesale_price}</span> • <span className="text-accent font-semibold">Retail: ₹{item.retail_price}</span>
                         </p>
