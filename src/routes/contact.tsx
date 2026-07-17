@@ -31,7 +31,7 @@ const contactInfo = [
   { icon: Phone, title: "Phone", value: "+91 79846 79052", href: "tel:+917984679052" },
   { icon: Mail, title: "Email", value: "shaikh.itsolutions11@gmail.com", href: "mailto:shaikh.itsolutions11@gmail.com" },
   { icon: MapPin, title: "Location", value: "Vadodara, Gujarat, India" },
-  { icon: Clock, title: "Hours", value: "24/7" },
+  { icon: Clock, title: "Hours", value: "24x7" },
 ];
 
 function ContactPage() {
