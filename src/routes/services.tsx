@@ -67,10 +67,10 @@ function ServicesPage() {
                 s.title === "CCTV Installation" ? "cctv-installation" :
                 s.title === "Website Development" ? "website-development" : "it-support";
 
-              return (
-                <a
+             return (
+                <Link
                   key={s.title}
-                  href={`/services/${serviceId}`}
+                  to={"/services/" + serviceId}
                   className="group block rounded-2xl border border-border bg-card p-7 shadow-card-soft hover:shadow-elegant hover:-translate-y-1.5 transition-all duration-300 overflow-hidden text-left relative"
                 >
                   <div className="relative overflow-hidden rounded-xl mb-5 aspect-[4/3] w-full bg-navy-deep/20">
@@ -109,7 +109,7 @@ function ServicesPage() {
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     {s.desc}
                   </p>
-                </a>
+                </Link>
               );
             })}
           </div>
