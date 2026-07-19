@@ -3,7 +3,14 @@ import { ArrowRight, Clock, Wallet, MessageCircle, Headphones, Smile, BadgeCheck
 import { SiteLayout } from "@/components/SiteLayout";
 import { portfolio } from "@/lib/site-data";
 import { PageHero } from "./about";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+// 🌐 SUPABASE REAL PRODUCTION CLIENT ENGINE - SHAHID BHAI LIVE KEYS INITIALIZED
+const supabase = createClient(
+  "https://ctqjfpvwhecqasnixylb.supabase.co", 
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0cWpmcHZ3aGVjcWFzbml4eWxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwNDExNjksImV4cCI6MjA5OTYxNzE2OX0.Ma-9qaCnZY0D_Cv0YpjgV5vPJmYp82TaHWHbXhvx6ek"
+);
 
 export const Route = createFileRoute("/portfolio")({
   head: () => ({
@@ -30,14 +37,14 @@ interface ReviewItem {
   role: string;
   rating: number;
   text: string;
-  projectImages: string[];
+  project_images: string[];
 }
 
 function PortfolioPage() {
-  // Hardcoded card data has been cleared permanently
   const [dynamicReviews, setDynamicReviews] = useState<ReviewItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Clean Form Interface States
+  // Form Interface States
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [text, setText] = useState("");
@@ -48,6 +55,29 @@ function PortfolioPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [activeModalReview, setActiveModalReview] = useState<ReviewItem | null>(null);
   const [currentModalImgIdx, setCurrentModalImgIdx] = useState(0);
+
+  // 📥 SUPABASE DATA MOUNT PIPELINE
+  useEffect(() => {
+    fetchLiveReviews();
+  }, []);
+
+  async function fetchLiveReviews() {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("reviews")
+        .select("*")
+        .order("created_at", { ascending: false });
+      
+      if (data) {
+        setDynamicReviews(data);
+      }
+    } catch (err) {
+      console.error("Database connection issue:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const scrollToFeedbackForm = () => {
     const element = document.getElementById("feedback-form-section");
@@ -76,25 +106,39 @@ function PortfolioPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // 📤 SUPABASE SYNC INSERT & UPDATE LOGIC ENGINE
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !text) return alert("Please fill Name and Feedback message!");
 
     if (editingId) {
-      setDynamicReviews(dynamicReviews.map(review => 
-        review.id === editingId ? { ...review, name, role: role || "Valued Customer", rating, text, projectImages } : review
-      ));
+      const { error } = await supabase
+        .from("reviews")
+        .update({
+          name,
+          role: role || "Valued Customer",
+          rating,
+          text,
+          project_images: projectImages
+        })
+        .eq("id", editingId);
+
+      if (error) return alert("Update Error: " + error.message);
       setEditingId(null);
     } else {
-      const newReview: ReviewItem = {
-        id: Date.now().toString(),
-        name,
-        role: role || "Valued Customer",
-        rating,
-        text,
-        projectImages: projectImages.length > 0 ? projectImages : []
-      };
-      setDynamicReviews([...dynamicReviews, newReview]);
+      const { error } = await supabase
+        .from("reviews")
+        .insert([
+          {
+            name,
+            role: role || "Valued Customer",
+            rating,
+            text,
+            project_images: projectImages
+          }
+        ]);
+
+      if (error) return alert("Submission Error: " + error.message);
     }
     
     setName("");
@@ -102,6 +146,7 @@ function PortfolioPage() {
     setText("");
     setRating(5);
     setProjectImages([]);
+    fetchLiveReviews(); // Realtime grid tracking refresh trigger
   };
 
   const startEdit = (review: ReviewItem, e: React.MouseEvent) => {
@@ -111,14 +156,20 @@ function PortfolioPage() {
     setRole(review.role);
     setText(review.text);
     setRating(review.rating);
-    setProjectImages(review.projectImages);
+    setProjectImages(review.project_images || []);
     setTimeout(scrollToFeedbackForm, 100);
   };
 
-  const deleteReview = (id: string, e: React.MouseEvent) => {
+  const deleteReview = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    setDynamicReviews(dynamicReviews.filter(review => review.id !== id));
+    const confirmDelete = window.confirm("Are you sure you want to delete this feedback?");
+    if (!confirmDelete) return;
+
+    const { error } = await supabase.from("reviews").delete().eq("id", id);
+    if (error) return alert("Delete Error: " + error.message);
+    
     if (editingId === id) setEditingId(null);
+    fetchLiveReviews();
   };
 
   const handlePrevImage = (e: React.MouseEvent, imgLength: number) => {
@@ -206,60 +257,63 @@ function PortfolioPage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground">Real-time Client Feedback</h2>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16 items-start">
-            {dynamicReviews.map((item) => (
-              <div 
-                key={item.id} 
-                onClick={() => { setActiveModalReview(item); setCurrentModalImgIdx(0); }}
-                className="rounded-2xl bg-card border border-border shadow-card-soft overflow-hidden hover:border-primary/40 hover:shadow-elegant transition-all group relative cursor-pointer flex flex-col justify-between"
-              >
-                <div>
-                  {item.projectImages && item.projectImages.length > 0 && (
-                    <div className="aspect-[16/9] w-full bg-slate-100 overflow-hidden border-b border-border relative">
-                      <img src={item.projectImages[0]} alt="Project Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
-                      {item.projectImages.length > 1 && (
-                        <div className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] bg-slate-900/70 text-white rounded-md backdrop-blur-sm">
-                          + {item.projectImages.length - 1} more photos
-                        </div>
-                      )}
-                    </div>
-                  )}
+          {loading ? (
+            <div className="text-center py-12 text-sm text-muted-foreground font-sans">Syncing cloud repository...</div>
+          ) : (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16 items-start">
+              {dynamicReviews.map((item) => (
+                <div 
+                  key={item.id} 
+                  onClick={() => { setActiveModalReview(item); setCurrentModalImgIdx(0); }}
+                  className="rounded-2xl bg-card border border-border shadow-card-soft overflow-hidden hover:border-primary/40 hover:shadow-elegant transition-all group relative cursor-pointer flex flex-col justify-between"
+                >
+                  <div>
+                    {item.project_images && item.project_images.length > 0 && (
+                      <div className="aspect-[16/9] w-full bg-slate-100 overflow-hidden border-b border-border relative">
+                        <img src={item.project_images[0]} alt="Project Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        {item.project_images.length > 1 && (
+                          <div className="absolute bottom-2 right-2 px-2 py-0.5 text-[10px] bg-slate-900/70 text-white rounded-md backdrop-blur-sm">
+                            + {item.project_images.length - 1} more photos
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                  <div className="p-6">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="flex gap-1">
-                        {[...Array(5)].map((_, idx) => (
-                          <Star key={idx} className={`h-4 w-4 ${idx < item.rating ? 'fill-amber-400 text-amber-400' : 'text-muted/40'}`} />
-                        ))}
+                    <div className="p-6">
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex gap-1">
+                          {[...Array(5)].map((_, idx) => (
+                            <Star key={idx} className={`h-4 w-4 ${idx < item.rating ? 'fill-amber-400 text-amber-400' : 'text-muted/40'}`} />
+                          ))}
+                        </div>
+                        
+                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-4 bg-background/80 backdrop-blur p-1 rounded-xl border border-border z-10">
+                          <button onClick={(e) => startEdit(item, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+                            <Pencil className="h-3.5 w-3.5" />
+                          </button>
+                          <button onClick={(e) => deleteReview(item.id, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors">
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
                       </div>
+                      <p className="text-sm text-muted-foreground italic leading-relaxed mb-4">"{item.text}"</p>
                       
-                      <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-4 bg-background/80 backdrop-blur p-1 rounded-xl border border-border z-10">
-                        <button onClick={(e) => startEdit(item, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-blue-500 hover:bg-blue-50 transition-colors">
-                          <Pencil className="h-3.5 w-3.5" />
-                        </button>
-                        <button onClick={(e) => deleteReview(item.id, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
+                      <div className="border-t border-border/60 pt-3">
+                        <div className="font-semibold text-foreground text-sm">{item.name}</div>
+                        <div className="text-xs text-muted-foreground uppercase tracking-wider">{item.role}</div>
                       </div>
-                    </div>
-                    <p className="text-sm text-muted-foreground italic leading-relaxed mb-4">"{item.text}"</p>
-                    
-                    <div className="border-t border-border/60 pt-3">
-                      <div className="font-semibold text-foreground text-sm">{item.name}</div>
-                      <div className="text-xs text-muted-foreground uppercase tracking-wider">{item.role}</div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
 
           {/* Form Layer */}
           <div id="feedback-form-section" className="max-w-xl mx-auto p-8 rounded-2xl border border-border bg-card shadow-card-soft scroll-mt-28">
             <h3 className="text-xl font-bold text-foreground mb-2 flex items-center gap-2">
               <Plus className="h-5 w-5 text-primary" /> {editingId ? "Modify Feedback Data" : "Share Your Experience"}
             </h3>
-            <p className="text-xs text-muted-foreground mb-6">Select multiple snapshot files if needed. Only the first image prints as the thumbnail stack card.</p>
             
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -285,15 +339,9 @@ function PortfolioPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold mb-1 text-foreground uppercase tracking-wider">Upload Project Snapshots (You can select multiple files)</label>
+                <label className="block text-xs font-semibold mb-1 text-foreground uppercase tracking-wider">Upload Project Snapshots</label>
                 <div className="relative border border-dashed border-border rounded-xl p-4 bg-slate-50/50 flex flex-col items-center justify-center text-center hover:bg-slate-50 cursor-pointer">
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    multiple 
-                    onChange={handleMultipleFilesChange} 
-                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" 
-                  />
+                  <input type="file" accept="image/*" multiple onChange={handleMultipleFilesChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
                   <Upload className="h-5 w-5 text-muted-foreground mb-1" />
                   <span className="text-xs text-muted-foreground">
                     {projectImages.length > 0 ? `${projectImages.length} images loaded successfully!` : "Choose files (Hold Ctrl key to select multiple images)"}
@@ -314,7 +362,7 @@ function PortfolioPage() {
         </div>
       </section>
 
-      {/* DYNAMIC LIGHTBOX MODAL WITH GALLERY SLIDER CONTROLS */}
+      {/* DYNAMIC LIGHTBOX MODAL */}
       {activeModalReview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
           <div className="relative w-full max-w-2xl max-h-[95vh] overflow-y-auto bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-elegant text-foreground animate-in fade-in zoom-in-95 duration-200">
@@ -322,45 +370,25 @@ function PortfolioPage() {
               <X className="h-4 w-4" />
             </button>
 
-            {activeModalReview.projectImages && activeModalReview.projectImages.length > 0 && (
+            {activeModalReview.project_images && activeModalReview.project_images.length > 0 && (
               <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden bg-slate-900 mb-6 border border-border relative group/slider">
-                <img 
-                  src={activeModalReview.projectImages[currentModalImgIdx]} 
-                  alt={`Project slide ${currentModalImgIdx + 1}`} 
-                  className="w-full h-full object-contain" 
-                />
-                
+                <img src={activeModalReview.project_images[currentModalImgIdx]} alt="Project" className="w-full h-full object-contain" />
                 <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md text-white text-xs font-medium">
-                  {currentModalImgIdx + 1} / {activeModalReview.projectImages.length}
+                  {currentModalImgIdx + 1} / {activeModalReview.project_images.length}
                 </div>
-
-                {activeModalReview.projectImages.length > 1 && (
+                {activeModalReview.project_images.length > 1 && (
                   <>
-                    <button 
-                      onClick={(e) => handlePrevImage(e, activeModalReview.projectImages.length)}
-                      className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 border border-white/15"
-                    >
-                      <ChevronLeft className="h-5 w-5" />
-                    </button>
-                    <button 
-                      onClick={(e) => handleNextImage(e, activeModalReview.projectImages.length)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70 border border-white/15"
-                    >
-                      <ChevronRight className="h-5 w-5" />
-                    </button>
+                    <button onClick={(e) => handlePrevImage(e, activeModalReview.project_images.length)} className="absolute left-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 text-white border border-white/15"><ChevronLeft className="h-5 w-5" /></button>
+                    <button onClick={(e) => handleNextImage(e, activeModalReview.project_images.length)} className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-full bg-black/50 text-white border border-white/15"><ChevronRight className="h-5 w-5" /></button>
                   </>
                 )}
               </div>
             )}
 
             <div className="flex gap-1 mb-3">
-              {[...Array(5)].map((_, idx) => (
-                <Star key={idx} className={`h-5 w-5 ${idx < activeModalReview.rating ? 'fill-amber-400 text-amber-400' : 'text-muted/40'}`} />
-              ))}
+              {[...Array(5)].map((_, idx) => <Star key={idx} className={`h-5 w-5 ${idx < activeModalReview.rating ? 'fill-amber-400 text-amber-400' : 'text-muted/40'}`} />)}
             </div>
-
             <p className="text-base sm:text-lg text-foreground italic leading-relaxed mb-6">"{activeModalReview.text}"</p>
-
             <div className="border-t border-border pt-4">
               <div className="font-bold text-base">{activeModalReview.name}</div>
               <div className="text-sm text-muted-foreground uppercase tracking-wider">{activeModalReview.role}</div>
@@ -373,12 +401,9 @@ function PortfolioPage() {
       <section className="py-20 bg-background text-center">
         <div className="mx-auto max-w-3xl px-4">
           <h2 className="text-3xl sm:text-4xl font-bold mb-4">Want to be our next success story?</h2>
-          <Link to="/contact" className="inline-flex items-center gap-2 mt-6 px-7 py-3.5 rounded-xl bg-primary-gradient text-navy-foreground font-semibold shadow-elegant hover:scale-105 transition-transform">
-            Let's talk <ArrowRight className="h-4 w-4" />
-          </Link>
+          <Link to="/contact" className="inline-flex items-center gap-2 mt-6 px-7 py-3.5 rounded-xl bg-primary-gradient text-navy-foreground font-semibold shadow-elegant hover:scale-105 transition-transform">Let's talk <ArrowRight className="h-4 w-4" /></Link>
         </div>
       </section>
     </SiteLayout>
   );
 }
-
