@@ -44,6 +44,10 @@ function PortfolioPage() {
   const [dynamicReviews, setDynamicReviews] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // 🔒 URL SE '?admin=true' CHECK KARNE KA PARSER MECHANISM
+  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
+  const isAdmin = searchParams.get("admin") === "true";
+
   // Form Interface States
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
@@ -287,14 +291,17 @@ function PortfolioPage() {
                           ))}
                         </div>
                         
-                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-4 bg-background/80 backdrop-blur p-1 rounded-xl border border-border z-10">
-                          <button onClick={(e) => startEdit(item, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-blue-500 hover:bg-blue-50 transition-colors">
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <button onClick={(e) => deleteReview(item.id, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors">
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
+                        {/* 🔒 SECURITY LOCK: Edit/Delete options toggle exclusively under isAdmin check */}
+                        {isAdmin && (
+                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-4 bg-background/80 backdrop-blur p-1 rounded-xl border border-border z-10">
+                            <button onClick={(e) => startEdit(item, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button onClick={(e) => deleteReview(item.id, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors">
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                       <p className="text-sm text-muted-foreground italic leading-relaxed mb-4">"{item.text}"</p>
                       
@@ -362,7 +369,7 @@ function PortfolioPage() {
         </div>
       </section>
 
-      {/* DYNAMIC LIGHTBOX MODAL */}
+      {/* MODAL LIGHTBOX */}
       {activeModalReview && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-sm">
           <div className="relative w-full max-w-2xl max-h-[95vh] overflow-y-auto bg-card border border-border rounded-3xl p-6 sm:p-8 shadow-elegant text-foreground animate-in fade-in zoom-in-95 duration-200">
