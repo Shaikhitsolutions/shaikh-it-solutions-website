@@ -30,23 +30,12 @@ interface ReviewItem {
   role: string;
   rating: number;
   text: string;
-  projectImages: string[]; // Dynamic multi-image stack array configuration
+  projectImages: string[];
 }
 
 function PortfolioPage() {
-  const [dynamicReviews, setDynamicReviews] = useState<ReviewItem[]>([
-    {
-      id: "1",
-      name: "Shahid Shaikh",
-      role: "owner",
-      rating: 5,
-      text: "best",
-      projectImages: [
-        "https://images.unsplash.com/photo-1557597774-9d273605dfa9?q=80&w=400&auto=format&fit=crop",
-        "https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?q=80&w=400&auto=format&fit=crop"
-      ]
-    }
-  ]);
+  // Hardcoded card data has been cleared permanently
+  const [dynamicReviews, setDynamicReviews] = useState<ReviewItem[]>([]);
 
   // Clean Form Interface States
   const [name, setName] = useState("");
@@ -67,7 +56,6 @@ function PortfolioPage() {
     }
   };
 
-  // Multiple files local reader engine pipeline conversion
   const handleMultipleFilesChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (files && files.length > 0) {
@@ -133,7 +121,6 @@ function PortfolioPage() {
     if (editingId === id) setEditingId(null);
   };
 
-  // Lightbox navigational controls
   const handlePrevImage = (e: React.MouseEvent, imgLength: number) => {
     e.stopPropagation();
     setCurrentModalImgIdx((prev) => (prev === 0 ? imgLength - 1 : prev - 1));
@@ -219,7 +206,6 @@ function PortfolioPage() {
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground">Real-time Client Feedback</h2>
           </div>
 
-          {/* Cards Display Grid */}
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-16 items-start">
             {dynamicReviews.map((item) => (
               <div 
@@ -228,7 +214,6 @@ function PortfolioPage() {
                 className="rounded-2xl bg-card border border-border shadow-card-soft overflow-hidden hover:border-primary/40 hover:shadow-elegant transition-all group relative cursor-pointer flex flex-col justify-between"
               >
                 <div>
-                  {/* Renders ONLY the first image index pointer as Cover view */}
                   {item.projectImages && item.projectImages.length > 0 && (
                     <div className="aspect-[16/9] w-full bg-slate-100 overflow-hidden border-b border-border relative">
                       <img src={item.projectImages[0]} alt="Project Cover" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
@@ -299,7 +284,6 @@ function PortfolioPage() {
                 </div>
               </div>
 
-              {/* Dynamic Multiple Image upload tag element configuration */}
               <div>
                 <label className="block text-xs font-semibold mb-1 text-foreground uppercase tracking-wider">Upload Project Snapshots (You can select multiple files)</label>
                 <div className="relative border border-dashed border-border rounded-xl p-4 bg-slate-50/50 flex flex-col items-center justify-center text-center hover:bg-slate-50 cursor-pointer">
@@ -338,7 +322,6 @@ function PortfolioPage() {
               <X className="h-4 w-4" />
             </button>
 
-            {/* Slider container mapping block */}
             {activeModalReview.projectImages && activeModalReview.projectImages.length > 0 && (
               <div className="w-full aspect-[16/9] rounded-2xl overflow-hidden bg-slate-900 mb-6 border border-border relative group/slider">
                 <img 
@@ -347,12 +330,10 @@ function PortfolioPage() {
                   className="w-full h-full object-contain" 
                 />
                 
-                {/* Dynamic Image Counter Box */}
                 <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-md text-white text-xs font-medium">
                   {currentModalImgIdx + 1} / {activeModalReview.projectImages.length}
                 </div>
 
-                {/* Left/Right Nav Indicators (Triggered only if image counts exceed 1 block) */}
                 {activeModalReview.projectImages.length > 1 && (
                   <>
                     <button 
