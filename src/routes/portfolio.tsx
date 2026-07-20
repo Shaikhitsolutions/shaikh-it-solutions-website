@@ -6,7 +6,7 @@ import { PageHero } from "./about";
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 
-// 🌐 SUPABASE REAL PRODUCTION CLIENT ENGINE - SHAHID BHAI LIVE KEYS INITIALIZED
+// 🌐 SUPABASE REAL PRODUCTION CLIENT ENGINE
 const supabase = createClient(
   "https://ctqjfpvwhecqasnixylb.supabase.co", 
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0cWpmcHZ3aGVjcWFzbml4eWxiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwNDExNjksImV4cCI6MjA5OTYxNzE2OX0.Ma-9qaCnZY0D_Cv0YpjgV5vPJmYp82TaHWHbXhvx6ek"
@@ -44,11 +44,11 @@ function PortfolioPage() {
   const [dynamicReviews, setDynamicReviews] = useState<ReviewItem[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // 🔒 URL SE '?admin=true' CHECK KARNE KA PARSER MECHANISM
+  // 🔒 CHECK ADMIN PARAMETER FROM URL
   const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
   const isAdmin = searchParams.get("admin") === "true";
 
-  // Form Interface States
+  // Form States
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [text, setText] = useState("");
@@ -60,7 +60,6 @@ function PortfolioPage() {
   const [activeModalReview, setActiveModalReview] = useState<ReviewItem | null>(null);
   const [currentModalImgIdx, setCurrentModalImgIdx] = useState(0);
 
-  // 📥 SUPABASE DATA MOUNT PIPELINE
   useEffect(() => {
     fetchLiveReviews();
   }, []);
@@ -110,7 +109,6 @@ function PortfolioPage() {
     }
   };
 
-  // 📤 SUPABASE SYNC INSERT & UPDATE LOGIC ENGINE
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !text) return alert("Please fill Name and Feedback message!");
@@ -150,7 +148,7 @@ function PortfolioPage() {
     setText("");
     setRating(5);
     setProjectImages([]);
-    fetchLiveReviews(); // Realtime grid tracking refresh trigger
+    fetchLiveReviews();
   };
 
   const startEdit = (review: ReviewItem, e: React.MouseEvent) => {
@@ -291,23 +289,29 @@ function PortfolioPage() {
                           ))}
                         </div>
                         
-                        {/* 🔒 SECURITY LOCK: Edit/Delete options toggle exclusively under isAdmin check */}
+                        {/* 🔒 ADMIN ONLY CONTROLS */}
                         {isAdmin && (
                           <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity absolute top-4 right-4 bg-background/80 backdrop-blur p-1 rounded-xl border border-border z-10">
-                            <button onClick={(e) => startEdit(item, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+                            <button onClick={(e) => startEdit(item, e)} title="Edit Feedback" className="p-1.5 rounded-lg text-slate-500 hover:text-blue-500 hover:bg-blue-50 transition-colors">
                               <Pencil className="h-3.5 w-3.5" />
                             </button>
-                            <button onClick={(e) => deleteReview(item.id, e)} className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors">
+                            <button onClick={(e) => deleteReview(item.id, e)} title="Delete Feedback" className="p-1.5 rounded-lg text-slate-500 hover:text-red-500 hover:bg-red-50 transition-colors">
                               <Trash2 className="h-3.5 w-3.5" />
                             </button>
                           </div>
                         )}
                       </div>
-                      <p className="text-sm text-muted-foreground italic leading-relaxed mb-4">"{item.text}"</p>
+                      <p className="text-sm text-muted-foreground italic leading-relaxed mb-6">"{item.text}"</p>
                       
-                      <div className="border-t border-border/60 pt-3">
-                        <div className="font-semibold text-foreground text-sm">{item.name}</div>
-                        <div className="text-xs text-muted-foreground uppercase tracking-wider">{item.role}</div>
+                      {/* 👤 PROFILE AVATAR BUBBLE LAYER */}
+                      <div className="border-t border-border/60 pt-4 flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm uppercase shrink-0 shadow-inner">
+                          {item.name ? item.name.charAt(0) : "U"}
+                        </div>
+                        <div>
+                          <div className="font-semibold text-foreground text-sm leading-tight">{item.name}</div>
+                          <div className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5">{item.role}</div>
+                        </div>
                       </div>
                     </div>
                   </div>
