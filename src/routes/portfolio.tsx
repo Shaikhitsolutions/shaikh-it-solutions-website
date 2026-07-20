@@ -109,7 +109,7 @@ function PortfolioPage() {
     }
   };
 
-  // ❌ GALAT IMAGE REMOVE KARNE KA FUNCTION
+  // ❌ FORM SE SINGLE IMAGE REMOVE KARNE KA FUNCTION
   const removeImageFromForm = (indexToRemove: number) => {
     setProjectImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
@@ -163,7 +163,8 @@ function PortfolioPage() {
     setRole(review.role);
     setText(review.text);
     setRating(review.rating);
-    setProjectImages(review.project_images || []);
+    // 🖼️ EDIT CLICK PAR PURANI IMAGES FORM PREVIEW MEIN POPULATE HO JAYENGI
+    setProjectImages(review.project_images ? [...review.project_images] : []);
     setTimeout(scrollToFeedbackForm, 100);
   };
 
@@ -370,33 +371,38 @@ function PortfolioPage() {
                 </div>
               </div>
 
-              {/* 🖼️ IMAGE UPLOAD & LIVE REMOVE PREVIEW CONTAINER */}
+              {/* 🖼️ IMAGE UPLOAD & INTERACTIVE EDIT/DELETE THUMBNAILS ENGINE */}
               <div>
                 <label className="block text-xs font-semibold mb-1 text-foreground uppercase tracking-wider">Upload Project Snapshots</label>
+                
+                {/* File Input Box */}
                 <div className="relative border border-dashed border-border rounded-xl p-4 bg-slate-50/50 flex flex-col items-center justify-center text-center hover:bg-slate-50 cursor-pointer mb-3">
                   <input type="file" accept="image/*" multiple onChange={handleMultipleFilesChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
                   <Upload className="h-5 w-5 text-muted-foreground mb-1" />
                   <span className="text-xs text-muted-foreground">
-                    Click or drag files here to attach project photos
+                    Click or drag files here to attach or change project photos
                   </span>
                 </div>
 
-                {/* Live Image Thumbnails with Delete Cross Button */}
-                {projectImages.length > 0 && (
-                  <div className="flex flex-wrap gap-3 p-3 bg-slate-100/60 rounded-xl border border-border">
-                    {projectImages.map((imgSrc, idx) => (
-                      <div key={idx} className="relative h-16 w-16 rounded-lg overflow-hidden border border-border group bg-background shadow-xs">
-                        <img src={imgSrc} alt="Thumbnail" className="w-full h-full object-cover" />
-                        <button
-                          type="button"
-                          onClick={() => removeImageFromForm(idx)}
-                          className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-md z-20"
-                          title="Remove Image"
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </div>
-                    ))}
+                {/* Live Image Thumbnails Array with Red Delete Button */}
+                {projectImages && projectImages.length > 0 && (
+                  <div className="space-y-1.5">
+                    <span className="text-[11px] font-medium text-slate-500 uppercase tracking-wider">Attached Images ({projectImages.length}):</span>
+                    <div className="flex flex-wrap gap-3 p-3 bg-slate-100/70 rounded-xl border border-border">
+                      {projectImages.map((imgSrc, idx) => (
+                        <div key={idx} className="relative h-20 w-20 rounded-xl overflow-hidden border border-border group bg-background shadow-xs shrink-0">
+                          <img src={imgSrc} alt="Attached Preview" className="w-full h-full object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => removeImageFromForm(idx)}
+                            className="absolute top-1 right-1 p-1.5 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-md z-20 cursor-pointer"
+                            title="Remove this image"
+                          >
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
@@ -406,7 +412,7 @@ function PortfolioPage() {
                 <textarea rows={3} value={text} onChange={(e) => setText(e.target.value)} className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:border-primary resize-none" placeholder="Type your experience here..." required />
               </div>
               
-              <button type="submit" className="w-full py-3 bg-primary-gradient text-navy-foreground font-semibold rounded-xl text-sm transition-transform active:scale-95 shadow-elegant">
+              <button type="submit" className="w-full py-3 bg-primary-gradient text-navy-foreground font-semibold rounded-xl text-sm transition-transform active:scale-95 shadow-elegant cursor-pointer">
                 {editingId ? "Update Data" : "Submit Live Feedback"}
               </button>
             </form>
