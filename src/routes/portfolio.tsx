@@ -101,12 +101,17 @@ function PortfolioPage() {
           loadedImages.push(reader.result as string);
           readCount++;
           if (readCount === files.length) {
-            setProjectImages(loadedImages);
+            setProjectImages((prev) => [...prev, ...loadedImages]);
           }
         };
         reader.readAsDataURL(files[i]);
       }
     }
+  };
+
+  // ❌ GALAT IMAGE REMOVE KARNE KA FUNCTION
+  const removeImageFromForm = (indexToRemove: number) => {
+    setProjectImages((prev) => prev.filter((_, idx) => idx !== indexToRemove));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -306,28 +311,28 @@ function PortfolioPage() {
                         </div>
                         <p className="text-sm text-muted-foreground italic leading-relaxed mb-6">"{item.text}"</p>
                         
-            {/* 👤 PROFILE AVATAR LAYER (OFFICIAL BRAND LOGO VS INITIAL BUBBLE) */}
-<div className="border-t border-border/60 pt-4 flex items-center gap-3">
-  {isOfficial ? (
-    <img 
-      src="/favicon.png" 
-      alt="Shaikh.IT Solutions Logo" 
-      className="h-10 w-10 rounded-full object-cover border-2 border-primary/40 shadow-sm bg-navy-deep p-0.5 shrink-0" 
-    />
-  ) : (
-    <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm uppercase shrink-0 shadow-inner">
-      {item.name ? item.name.charAt(0) : "U"}
-    </div>
-  )}
+                        {/* 👤 PROFILE AVATAR LAYER */}
+                        <div className="border-t border-border/60 pt-4 flex items-center gap-3">
+                          {isOfficial ? (
+                            <img 
+                              src="/favicon.png" 
+                              alt="Shaikh.IT Solutions Logo" 
+                              className="h-10 w-10 rounded-full object-cover border-2 border-primary/40 shadow-sm bg-navy-deep p-0.5 shrink-0" 
+                            />
+                          ) : (
+                            <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-bold text-sm uppercase shrink-0 shadow-inner">
+                              {item.name ? item.name.charAt(0) : "U"}
+                            </div>
+                          )}
 
-  <div>
-    <div className="font-semibold text-foreground text-sm leading-tight flex items-center gap-1.5">
-      {item.name}
-      {isOfficial && <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" title="Official Account"></span>}
-    </div>
-    <div className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5">{item.role}</div>
-  </div>
-</div>
+                          <div>
+                            <div className="font-semibold text-foreground text-sm leading-tight flex items-center gap-1.5">
+                              {item.name}
+                              {isOfficial && <span className="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-sm" title="Official Account"></span>}
+                            </div>
+                            <div className="text-xs text-muted-foreground uppercase tracking-wider mt-0.5">{item.role}</div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -357,23 +362,43 @@ function PortfolioPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold mb-1 text-foreground uppercase tracking-wider">Your Name *</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:border-primary" placeholder="e.g. Shaikh.IT Solutions" required />
+                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:border-primary" placeholder="e.g. Shahid Shaikh" required />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold mb-1 text-foreground uppercase tracking-wider">Designation / Role</label>
-                  <input type="text" value={role} onChange={(e) => setRole(e.target.value)} className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:border-primary" placeholder="e.g. Official Service Provider" />
+                  <input type="text" value={role} onChange={(e) => setRole(e.target.value)} className="w-full px-4 py-2 text-sm rounded-xl border border-border bg-background focus:outline-none focus:border-primary" placeholder="e.g. owner" />
                 </div>
               </div>
 
+              {/* 🖼️ IMAGE UPLOAD & LIVE REMOVE PREVIEW CONTAINER */}
               <div>
                 <label className="block text-xs font-semibold mb-1 text-foreground uppercase tracking-wider">Upload Project Snapshots</label>
-                <div className="relative border border-dashed border-border rounded-xl p-4 bg-slate-50/50 flex flex-col items-center justify-center text-center hover:bg-slate-50 cursor-pointer">
-                  <input type="file" accept="image/*" multiple onChange={handleMultipleFilesChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full" />
+                <div className="relative border border-dashed border-border rounded-xl p-4 bg-slate-50/50 flex flex-col items-center justify-center text-center hover:bg-slate-50 cursor-pointer mb-3">
+                  <input type="file" accept="image/*" multiple onChange={handleMultipleFilesChange} className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10" />
                   <Upload className="h-5 w-5 text-muted-foreground mb-1" />
                   <span className="text-xs text-muted-foreground">
-                    {projectImages.length > 0 ? `${projectImages.length} images loaded successfully!` : "Choose files (Hold Ctrl key to select multiple images)"}
+                    Click or drag files here to attach project photos
                   </span>
                 </div>
+
+                {/* Live Image Thumbnails with Delete Cross Button */}
+                {projectImages.length > 0 && (
+                  <div className="flex flex-wrap gap-3 p-3 bg-slate-100/60 rounded-xl border border-border">
+                    {projectImages.map((imgSrc, idx) => (
+                      <div key={idx} className="relative h-16 w-16 rounded-lg overflow-hidden border border-border group bg-background shadow-xs">
+                        <img src={imgSrc} alt="Thumbnail" className="w-full h-full object-cover" />
+                        <button
+                          type="button"
+                          onClick={() => removeImageFromForm(idx)}
+                          className="absolute top-1 right-1 p-1 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors shadow-md z-20"
+                          title="Remove Image"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div>
