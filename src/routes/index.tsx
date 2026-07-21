@@ -6,22 +6,11 @@ import {
 } from "lucide-react";
 import heroBg from "@/assets/image/hero.png";
 
-import logo from "@/assets/image/logo.png";
-import computerRepair from "@/assets/image/computer repair.png";
-import windowsInstallation from "@/assets/image/Windows Installation.png";
-import networking from "@/assets/image/Networking.png";
-import cctvInstallation from "@/assets/image/CCTV Installation.png";
-import websiteDevelopment from "@/assets/image/Website Development.png";
-import itSupport from "@/assets/image/IT support.png";
-import mobileRepair from "@/assets/image/mobile repair.png";
-
 import { SiteLayout } from "@/components/SiteLayout";
 import { services, stats, features, portfolio } from "@/lib/site-data";
 import {
   Accordion, AccordionItem, AccordionTrigger, AccordionContent,
 } from "@/components/ui/accordion";
-
-
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -71,7 +60,6 @@ function HomePage() {
           aria-hidden
         />
         <div className="absolute inset-0 bg-hero-gradient opacity-40" aria-hidden />
-        {/* animated blobs */}
         <div className="absolute -top-32 -left-32 h-[420px] w-[420px] rounded-full bg-accent/30 blur-3xl animate-blob" aria-hidden />
         <div className="absolute -bottom-32 -right-32 h-[420px] w-[420px] rounded-full bg-primary-glow/30 blur-3xl animate-blob [animation-delay:-7s]" aria-hidden />
         <div className="absolute inset-0 bg-dot opacity-[0.07]" aria-hidden />
@@ -179,7 +167,7 @@ function HomePage() {
         </div>
       </section>
 
-      {/* SERVICES */}
+      {/* SERVICES WITH DIRECT DYNAMIC LINKS */}
       <section className="py-20 lg:py-28 bg-secondary/40 relative">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-14">
@@ -189,22 +177,31 @@ function HomePage() {
           </div>
 
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {services.slice(0, 6).map((s, i) => (
-              <div
-                key={s.title}
-                className="group relative p-7 rounded-2xl border border-border bg-card shadow-card-soft hover:shadow-elegant hover:-translate-y-1.5 transition-all duration-300 overflow-hidden"
-                style={{ animationDelay: `${i * 60}ms` }}
-              >
-                <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-accent-gradient opacity-0 group-hover:opacity-20 blur-2xl transition-opacity" />
-                <div className="relative">
-                  <div className="grid h-14 w-14 place-items-center rounded-xl bg-primary-gradient text-navy-foreground mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform">
-                    <s.icon className="h-6 w-6" />
+            {services.slice(0, 6).map((s, i) => {
+              const serviceSlug = (s as any).id || s.title.toLowerCase().replace(/[^a-z0-9]/g, "-");
+
+              return (
+                <Link
+                  key={s.title}
+                  to="/services/$serviceId"
+                  params={{ serviceId: serviceSlug }}
+                  className="group relative p-7 rounded-2xl border border-border bg-card shadow-card-soft hover:shadow-elegant hover:-translate-y-1.5 transition-all duration-300 overflow-hidden cursor-pointer block"
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <div className="absolute -top-16 -right-16 h-32 w-32 rounded-full bg-accent-gradient opacity-0 group-hover:opacity-20 blur-2xl transition-opacity" />
+                  <div className="relative">
+                    <div className="grid h-14 w-14 place-items-center rounded-xl bg-primary-gradient text-navy-foreground mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform">
+                      <s.icon className="h-6 w-6" />
+                    </div>
+                    <h3 className="text-xl font-bold mb-2 group-hover:text-accent transition-colors flex items-center justify-between">
+                      {s.title}
+                      <ArrowRight className="h-4 w-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
                   </div>
-                  <h3 className="text-xl font-bold mb-2">{s.title}</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">{s.desc}</p>
-                </div>
-              </div>
-            ))}
+                </Link>
+              );
+            })}
           </div>
 
           <div className="text-center mt-12">
@@ -370,7 +367,6 @@ function HomePage() {
           </div>
         </div>
       </section>
-
 
       {/* FAQ */}
       <section className="py-20 lg:py-28 bg-background">

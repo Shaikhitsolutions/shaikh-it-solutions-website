@@ -9,7 +9,8 @@
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "lint": "eslint .",
-    "format": "prettier --write ."
+    "format": "prettier --write .",
+    "deploy": "git add . && git commit -m \"Auto Update Favicon & SEO\" && git push"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

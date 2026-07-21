@@ -98,13 +98,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7c1105fb-5165-4fb4-8177-5ab0fac9ee37/id-preview-9d59d47a--09d7e2e0-4da5-4436-9705-c8034464735b.lovable.app-1782468576370.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/7c1105fb-5165-4fb4-8177-5ab0fac9ee37/id-preview-9d59d47a--09d7e2e0-4da5-4436-9705-c8034464735b.lovable.app-1782468576370.png" },
     ],
-      links: [
-  { rel: "stylesheet", href: appCss },
+   links: [
+      { rel: "stylesheet", href: appCss },
 
-  { rel: "icon", type: "image/png", href: "/favicon.png" },
-
-  { rel: "apple-touch-icon", href: "/favicon.png" },
-],
+      // Google Favicon Optimization
+      { rel: "icon", type: "image/png", sizes: "48x48", href: "/favicon.png" },
+      { rel: "shortcut icon", href: "/favicon.png" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/favicon.png" },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
