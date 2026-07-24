@@ -10,6 +10,7 @@ import {
   CheckCircle,
   MessageSquare,
   Pencil,
+  Sparkles,
 } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { supabase } from "@/lib/supabaseClient";
@@ -51,6 +52,7 @@ function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
 
   const deviceId = getDeviceId();
 
@@ -68,6 +70,16 @@ function Products() {
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const categories = [
+    "ALL",
+    "KEYBOARD",
+    "MOUSE",
+    "PERIPHERALS",
+    "USB HUB",
+    "CCTV SYSTEMS",
+    "PARTNER OFFERS",
+  ];
+
   useEffect(() => {
     fetchProducts();
   }, []);
@@ -83,7 +95,7 @@ function Products() {
       if (error) throw error;
       if (data) {
         setProducts(data);
-        setFilteredProducts(data.filter((p) => !p.is_affiliate));
+        setFilteredProducts(data);
       }
     } catch (err) {
       console.error("Error fetching data:", err);
@@ -91,6 +103,21 @@ function Products() {
       setLoading(false);
     }
   }
+
+  const handleCategoryFilter = (cat: string) => {
+    setSelectedCategory(cat);
+    if (cat === "ALL") {
+      setFilteredProducts(products);
+    } else if (cat === "PARTNER OFFERS") {
+      setFilteredProducts(products.filter((p) => p.is_affiliate));
+    } else {
+      setFilteredProducts(
+        products.filter(
+          (p) => p.category.toUpperCase() === cat && !p.is_affiliate
+        )
+      );
+    }
+  };
 
   async function fetchReviews(productId: number) {
     try {
@@ -210,22 +237,22 @@ function Products() {
 
   return (
     <SiteLayout>
-      <div className="relative min-h-screen bg-navy text-navy-foreground overflow-hidden pt-36 pb-24 font-sans">
+      <div className="relative min-h-screen bg-navy text-navy-foreground overflow-hidden pt-32 pb-24 font-sans">
         
-        {/* Top Control Bar (CLEANED - Admin Button Removed) */}
-        <div className="w-full bg-white py-2 px-4 border-b border-black/5 shadow-sm flex justify-between items-center absolute top-[64px] left-0 z-20">
+        {/* Cart & Wishlist Bar */}
+        <div className="w-full bg-[#16223f]/80 backdrop-blur-md py-2 px-4 border-b border-white/10 shadow-md flex justify-between items-center absolute top-[64px] left-0 z-20">
           <div className="flex gap-2">
             <button
               onClick={() => { setIsCartOpen(true); setIsFavOpen(false); }}
-              className="flex items-center gap-2 px-4 py-2 bg-navy text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-navy/95 transition cursor-pointer"
+              className="flex items-center gap-2 px-4 py-1.5 bg-navy text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-slate-800 transition cursor-pointer border border-white/10"
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-4 w-4 text-accent" />
               My Cart ({cart.length})
             </button>
 
             <button
               onClick={() => { setIsFavOpen(true); setIsCartOpen(false); }}
-              className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-700 transition cursor-pointer"
+              className="flex items-center gap-2 px-4 py-1.5 bg-red-600/20 text-red-400 border border-red-500/30 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-red-600 hover:text-white transition cursor-pointer"
             >
               <Heart className="h-4 w-4 fill-current" />
               Wishlist ({favorites.length})
@@ -235,26 +262,74 @@ function Products() {
 
         {/* Content Container */}
         <div className="relative mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 z-10">
-          <div className="text-center max-w-3xl mx-auto mb-8">
-            <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
-              Hardware & Tech <span className="text-gradient">Peripherals</span>
+          
+          {/* 🌟 ORIGINAL THEME HEADER 🌟 */}
+          <div className="text-center max-w-3xl mx-auto mb-8 pt-6">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20 mb-4">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Direct Inventory Hub — Vadodara
+            </span>
+
+            <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight mb-3 text-white">
+              Hardware & Tech <br />
+              <span className="text-accent">Peripherals</span>
             </h1>
-            <p className="text-navy-foreground/75 text-xs sm:text-sm max-w-xl mx-auto">
-              Premium quality business components with direct service support.
+
+            <p className="text-navy-foreground/75 text-xs sm:text-sm max-w-2xl mx-auto leading-relaxed">
+              Premium quality business components, verified configurations, and instant logistics integration backed by official service support.
             </p>
           </div>
 
-          {/* Grid Layout */}
+          {/* 🌟 ORIGINAL DYNAMIC BULK DISCOUNT OFFER BANNER 🌟 */}
+          <div className="max-w-4xl mx-auto mb-8 glass p-5 rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="space-y-1 text-left">
+              <span className="text-[10px] font-bold text-accent uppercase tracking-widest flex items-center gap-1">
+                <Sparkles className="h-3 w-3" /> DYNAMIC BULK DISCOUNT ACTIVE
+              </span>
+              <h3 className="text-sm sm:text-base font-extrabold text-white">
+                "Shop 2+ items now & get a customized special offer coupon code for your next order!"
+              </h3>
+              <p className="text-[11px] text-navy-foreground/70">
+                <span className="font-bold text-navy-foreground">How to apply:</span> Simply select your items, trigger your WhatsApp cart checkout order, and add your coupon code inside the WhatsApp text box window!
+              </p>
+            </div>
+
+            <button
+              onClick={() => setIsCartOpen(true)}
+              className="bg-primary-gradient text-navy-foreground font-extrabold text-xs px-5 py-2.5 rounded-xl uppercase tracking-wider transition shrink-0 cursor-pointer shadow-lg hover:shadow-glow"
+            >
+              OPEN ACTIVE CART
+            </button>
+          </div>
+
+          {/* 🌟 ORIGINAL CATEGORY FILTER BUTTONS 🌟 */}
+          <div className="flex items-center justify-center gap-2 overflow-x-auto pb-6 mb-6 no-scrollbar">
+            {categories.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => handleCategoryFilter(cat)}
+                className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer whitespace-nowrap border ${
+                  selectedCategory === cat
+                    ? "bg-white text-navy font-black border-white shadow-lg"
+                    : "glass-dark text-navy-foreground/80 border-white/10 hover:border-white/30"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Product Grid */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 gap-3">
               <Loader2 className="h-8 w-8 text-accent animate-spin" />
             </div>
           ) : (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {filteredProducts.map((item) => (
                 <div
                   key={item.id}
-                  className="group flex flex-col justify-between rounded-xl border border-white/10 glass shadow-md hover:border-accent/40 transition-all overflow-hidden relative cursor-pointer"
+                  className="group flex flex-col justify-between rounded-2xl border border-white/10 glass shadow-xl hover:border-accent/50 transition-all overflow-hidden relative cursor-pointer"
                   onClick={() => openProductDetails(item)}
                 >
                   <div className="aspect-square bg-white flex items-center justify-center p-3 relative">
@@ -264,13 +339,12 @@ function Products() {
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                     />
                   </div>
-                  <div className="p-3">
-                    <h3 className="text-xs font-semibold text-white line-clamp-2 h-8">
+
+                  {/* Original Dark Strip Title Below Image */}
+                  <div className="p-3 glass-dark text-center">
+                    <h3 className="text-[11px] font-extrabold text-white uppercase tracking-wide truncate">
                       {item.name}
                     </h3>
-                    <span className="text-sm font-extrabold text-accent block mt-1">
-                      ₹{item.retail_price}
-                    </span>
                   </div>
                 </div>
               ))}
@@ -279,11 +353,10 @@ function Products() {
         </div>
       </div>
 
-      {/* 🌟 PRODUCT DETAILS & REVIEWS MODAL 🌟 */}
+      {/* Product Details Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-black/80 animate-fade-in">
           <div className="relative bg-[#0b1329] text-white w-full max-w-2xl rounded-2xl border border-white/10 shadow-2xl p-5 overflow-y-auto max-h-[90vh]">
-            
             <button
               onClick={() => setSelectedProduct(null)}
               className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
@@ -291,7 +364,6 @@ function Products() {
               <X className="h-5 w-5" />
             </button>
 
-            {/* Product Header */}
             <div className="grid md:grid-cols-2 gap-5">
               <div className="flex items-center justify-center p-3 bg-white rounded-xl h-48">
                 <img
@@ -313,12 +385,27 @@ function Products() {
                     {selectedProduct.description}
                   </p>
                 </div>
+
+                <div className="flex gap-2 mt-4">
+                  <button
+                    onClick={() => addToCart(selectedProduct)}
+                    className="flex-1 bg-primary-gradient text-navy-foreground font-bold py-2 rounded-xl text-xs transition cursor-pointer"
+                  >
+                    Add to Cart
+                  </button>
+                  <button
+                    onClick={() => toggleFavorite(selectedProduct.id)}
+                    className="p-2 border border-white/10 rounded-xl hover:bg-white/10 cursor-pointer"
+                  >
+                    <Heart className={`h-4 w-4 ${favorites.includes(selectedProduct.id) ? "text-red-500 fill-current" : "text-white"}`} />
+                  </button>
+                </div>
               </div>
             </div>
 
             <hr className="my-5 border-white/10" />
 
-            {/* REVIEWS SECTION */}
+            {/* Reviews Section */}
             <div className="text-left">
               <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-accent" />
@@ -327,48 +414,23 @@ function Products() {
 
               <div className="space-y-2 max-h-40 overflow-y-auto mb-4 pr-1">
                 {productReviews.length === 0 ? (
-                  <p className="text-xs text-navy-foreground/50 italic">
-                    No reviews yet. Be the first to review!
-                  </p>
+                  <p className="text-xs text-navy-foreground/50 italic">No reviews yet.</p>
                 ) : (
                   productReviews.map((rev) => {
                     const isMyReview = rev.user_device_id === deviceId;
-
                     return (
-                      <div
-                        key={rev.id}
-                        className="bg-white/5 p-2.5 rounded-xl border border-white/5 text-xs flex justify-between items-start"
-                      >
+                      <div key={rev.id} className="bg-white/5 p-2.5 rounded-xl border border-white/5 text-xs flex justify-between items-start">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-semibold text-white">{rev.user_name}</span>
-                            {isMyReview && (
-                              <span className="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-bold">
-                                You
-                              </span>
-                            )}
                             <span className="text-amber-400 font-bold">★ {rev.rating}/5</span>
                           </div>
                           <p className="text-navy-foreground/80">{rev.comment}</p>
                         </div>
-
-                        {/* Customer Controls Own Review Only */}
                         {isMyReview && (
                           <div className="flex gap-2">
-                            <button
-                              onClick={() => handleStartEdit(rev)}
-                              className="text-blue-400 hover:text-blue-300 p-1 cursor-pointer"
-                              title="Edit your review"
-                            >
-                              <Pencil size={13} />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteReview(rev.id)}
-                              className="text-red-400 hover:text-red-300 p-1 cursor-pointer"
-                              title="Delete review"
-                            >
-                              <Trash2 size={13} />
-                            </button>
+                            <button onClick={() => handleStartEdit(rev)} className="text-blue-400 p-1 cursor-pointer"><Pencil size={13} /></button>
+                            <button onClick={() => handleDeleteReview(rev.id)} className="text-red-400 p-1 cursor-pointer"><Trash2 size={13} /></button>
                           </div>
                         )}
                       </div>
@@ -377,36 +439,21 @@ function Products() {
                 )}
               </div>
 
-              {/* Add or Edit Review Form */}
               <form onSubmit={handleSaveReview} className="bg-white/5 p-3 rounded-xl border border-white/10 space-y-2">
                 <div className="flex justify-between items-center">
                   <h4 className="text-[11px] font-bold text-white uppercase">
                     {editingReviewId ? "✏️ Edit Your Feedback" : "Leave A Review"}
                   </h4>
-                  {editingReviewId && (
-                    <button
-                      type="button"
-                      onClick={() => setEditingReviewId(null)}
-                      className="text-[10px] text-red-400 hover:underline cursor-pointer"
-                    >
-                      Cancel Edit
-                    </button>
-                  )}
                 </div>
-
                 <div className="grid grid-cols-2 gap-2">
                   <input
-                    type="text"
-                    required
-                    placeholder="Your Name"
-                    value={reviewName}
+                    type="text" required placeholder="Your Name" value={reviewName}
                     onChange={(e) => setReviewName(e.target.value)}
-                    className="bg-navy border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-accent"
+                    className="bg-navy border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none"
                   />
                   <select
-                    value={reviewRating}
-                    onChange={(e) => setReviewRating(Number(e.target.value))}
-                    className="bg-navy border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-accent"
+                    value={reviewRating} onChange={(e) => setReviewRating(Number(e.target.value))}
+                    className="bg-navy border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none"
                   >
                     <option value={5}>⭐⭐⭐⭐⭐ (5 Star)</option>
                     <option value={4}>⭐⭐⭐⭐ (4 Star)</option>
@@ -416,17 +463,11 @@ function Products() {
                   </select>
                 </div>
                 <textarea
-                  required
-                  rows={2}
-                  placeholder="Write feedback about this product..."
-                  value={reviewComment}
+                  required rows={2} placeholder="Write feedback..." value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
-                  className="w-full bg-navy border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none focus:border-accent"
+                  className="w-full bg-navy border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none"
                 ></textarea>
-                <button
-                  type="submit"
-                  className="bg-accent hover:bg-accent/90 text-navy font-bold px-4 py-1.5 rounded-lg text-xs transition cursor-pointer"
-                >
+                <button type="submit" className="bg-primary-gradient text-navy-foreground font-bold px-4 py-1.5 rounded-lg text-xs transition cursor-pointer">
                   {editingReviewId ? "Update Review" : "Submit Review"}
                 </button>
               </form>
@@ -444,11 +485,8 @@ function Products() {
                 <h3 className="text-lg font-bold flex items-center gap-2">
                   <ShoppingCart className="h-5 w-5 text-accent" /> Your Cart ({cart.length})
                 </h3>
-                <button onClick={() => setIsCartOpen(false)} className="p-2 text-white/70 hover:text-white cursor-pointer">
-                  <X className="h-5 w-5" />
-                </button>
+                <button onClick={() => setIsCartOpen(false)} className="p-2 text-white/70 hover:text-white cursor-pointer"><X className="h-5 w-5" /></button>
               </div>
-
               {cart.length === 0 ? (
                 <div className="text-center py-16 text-navy-foreground/50 text-sm">Your cart is empty.</div>
               ) : (
@@ -460,15 +498,12 @@ function Products() {
                         <h4 className="text-xs font-bold text-white truncate">{item.name}</h4>
                         <span className="text-xs text-accent font-bold">₹{item.retail_price}</span>
                       </div>
-                      <button onClick={() => removeFromCart(item.id)} className="text-red-400 hover:text-red-500 p-2 cursor-pointer">
-                        <Trash2 className="h-4 w-4" />
-                      </button>
+                      <button onClick={() => removeFromCart(item.id)} className="text-red-400 hover:text-red-500 p-2 cursor-pointer"><Trash2 className="h-4 w-4" /></button>
                     </div>
                   ))}
                 </div>
               )}
             </div>
-
             {cart.length > 0 && (
               <div className="pt-4 border-t border-white/10 space-y-3">
                 <div className="flex justify-between items-center font-bold text-sm">
@@ -479,9 +514,7 @@ function Products() {
                   onClick={() => {
                     let itemList = cart.map((item, index) => `${index + 1}. ${item.name} - ₹${item.retail_price}`).join("\n");
                     let total = cart.reduce((sum, item) => sum + item.retail_price, 0);
-                    const message = encodeURIComponent(
-                      `Hello Shaikh.IT Solutions, I want to order:\n\n${itemList}\n\n*Total: ₹${total}*`
-                    );
+                    const message = encodeURIComponent(`Hello Shaikh.IT Solutions, I want to order:\n\n${itemList}\n\n*Total: ₹${total}*`);
                     window.open(`https://wa.me/917984679052?text=${message}`, "_blank");
                   }}
                   className="w-full py-3 bg-primary-gradient text-navy-foreground font-black text-xs uppercase tracking-widest rounded-xl hover:shadow-glow transition-all flex items-center justify-center gap-2 cursor-pointer"
@@ -503,11 +536,8 @@ function Products() {
                 <h3 className="text-lg font-bold flex items-center gap-2 text-red-400">
                   <Heart className="h-5 w-5 fill-current" /> My Wishlist ({favorites.length})
                 </h3>
-                <button onClick={() => setIsFavOpen(false)} className="p-2 text-white/70 hover:text-white cursor-pointer">
-                  <X className="h-5 w-5" />
-                </button>
+                <button onClick={() => setIsFavOpen(false)} className="p-2 text-white/70 hover:text-white cursor-pointer"><X className="h-5 w-5" /></button>
               </div>
-
               {favoriteProducts.length === 0 ? (
                 <div className="text-center py-20 text-navy-foreground/50 text-sm">Wishlist is empty.</div>
               ) : (
@@ -520,15 +550,8 @@ function Products() {
                         <span className="text-xs text-accent font-bold">₹{item.retail_price}</span>
                       </div>
                       <div className="flex gap-1">
-                        <button
-                          onClick={() => { addToCart(item); toggleFavorite(item.id); }}
-                          className="p-1.5 bg-white/10 rounded-lg text-xs font-semibold cursor-pointer"
-                        >
-                          + Cart
-                        </button>
-                        <button onClick={() => toggleFavorite(item.id)} className="text-red-400 p-1.5 cursor-pointer">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <button onClick={() => { addToCart(item); toggleFavorite(item.id); }} className="p-1.5 bg-accent/20 text-accent rounded-lg text-xs font-semibold cursor-pointer">+ Cart</button>
+                        <button onClick={() => toggleFavorite(item.id)} className="text-red-400 p-1.5 cursor-pointer"><Trash2 className="h-4 w-4" /></button>
                       </div>
                     </div>
                   ))}
