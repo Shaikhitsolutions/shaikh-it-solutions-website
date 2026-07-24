@@ -2,18 +2,14 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import {
   MessageCircle,
-  Layers,
   Loader2,
-  Sparkles,
   X,
   Heart,
-  Share2,
   ShoppingCart,
   Trash2,
   CheckCircle,
   MessageSquare,
   Pencil,
-  ShieldAlert,
 } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { supabase } from "@/lib/supabaseClient";
@@ -40,10 +36,8 @@ interface Product {
   description: string;
   image_url: string;
   is_affiliate?: boolean;
-  reviews?: Review[];
 }
 
-// Device ID Generator (To identify individual customer)
 const getDeviceId = () => {
   let deviceId = localStorage.getItem("shaikh_it_device_id");
   if (!deviceId) {
@@ -56,14 +50,10 @@ const getDeviceId = () => {
 function Products() {
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [activeCategory, setActiveCategory] = useState("All");
   const [loading, setLoading] = useState(true);
 
-  // User & Admin Identity
   const deviceId = getDeviceId();
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  // Modals & Panels
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productReviews, setProductReviews] = useState<Review[]>([]);
   const [cart, setCart] = useState<Product[]>([]);
@@ -71,19 +61,15 @@ function Products() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isFavOpen, setIsFavOpen] = useState(false);
 
-  // Review Input & Editing States
   const [editingReviewId, setEditingReviewId] = useState<string | null>(null);
   const [reviewName, setReviewName] = useState("");
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewComment, setReviewComment] = useState("");
 
-  // Toast State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts();
-    const adminToken = localStorage.getItem("shaikh_it_admin");
-    if (adminToken === "true") setIsAdmin(true);
   }, []);
 
   async function fetchProducts() {
@@ -106,7 +92,6 @@ function Products() {
     }
   }
 
-  // Fetch Reviews Fix
   async function fetchReviews(productId: number) {
     try {
       const { data, error } = await supabase
@@ -115,13 +100,11 @@ function Products() {
         .eq("product_id", productId)
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("Error fetching reviews:", error);
-      } else if (data) {
+      if (!error && data) {
         setProductReviews(data);
       }
     } catch (err) {
-      console.error("Error in fetchReviews:", err);
+      console.error("Error fetching reviews:", err);
     }
   }
 
@@ -170,27 +153,11 @@ function Products() {
 
   const favoriteProducts = products.filter((p) => favorites.includes(p.id));
 
-  const handleShare = (product: Product, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (navigator.share) {
-      navigator.share({
-        title: product.name,
-        text: `Check out ${product.name} at ₹${product.retail_price} on Shaikh.IT Solutions!`,
-        url: window.location.href,
-      }).catch(console.error);
-    } else {
-      navigator.clipboard.writeText(`${window.location.origin}/products?id=${product.id}`);
-      showNotification("🔗 Link copied to clipboard!");
-    }
-  };
-
- // Add or Update Review in Supabase
   const handleSaveReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedProduct || !reviewName || !reviewComment) return;
 
     if (editingReviewId) {
-      // Update Existing Review
       const { error } = await supabase
         .from("reviews")
         .update({
@@ -200,34 +167,22 @@ function Products() {
         })
         .eq("id", editingReviewId);
 
-      if (error) {
-        alert("Error updating: " + error.message);
-      } else {
-        showNotification("✏️ Review updated successfully!");
+      if (!error) {
+        showNotification("✏️ Review updated!");
         setEditingReviewId(null);
       }
     } else {
-      // Add New Review
       const newReview = {
-        product_id: Number(selectedProduct.id),
+        product_id: selectedProduct.id,
         user_name: reviewName,
-        rating: Number(reviewRating),
+        rating: reviewRating,
         comment: reviewComment,
         user_device_id: deviceId,
       };
 
-      const { data, error } = await supabase
-        .from("reviews")
-        .insert([newReview])
-        .select();
-
-      if (error) {
-        console.error("Supabase Error:", error);
-        alert("Supabase Error: " + error.message);
-      } else if (data) {
+      const { data, error } = await supabase.from("reviews").insert([newReview]).select();
+      if (!error && data) {
         showNotification("⭐ Review published!");
-        // Instantly update local state so it shows on screen immediately!
-        setProductReviews((prev) => [data[0], ...prev]);
       }
     }
 
@@ -236,20 +191,16 @@ function Products() {
     fetchReviews(selectedProduct.id);
   };
 
-  // Delete Review Handler (Allowed for Author or Admin)
   const handleDeleteReview = async (reviewId: string) => {
-    if (!confirm("Are you sure you want to delete this review?")) return;
+    if (!confirm("Are you sure you want to delete your review?")) return;
 
     const { error } = await supabase.from("reviews").delete().eq("id", reviewId);
     if (!error && selectedProduct) {
       showNotification("🗑️ Review deleted.");
       fetchReviews(selectedProduct.id);
-    } else {
-      console.error("Delete Review Error:", error);
     }
   };
 
-  // Start Edit Mode for User's own review
   const handleStartEdit = (rev: Review) => {
     setEditingReviewId(rev.id);
     setReviewName(rev.user_name);
@@ -261,8 +212,8 @@ function Products() {
     <SiteLayout>
       <div className="relative min-h-screen bg-navy text-navy-foreground overflow-hidden pt-36 pb-24 font-sans">
         
-        {/* Top Control Bar */}
-        <div className="w-full bg-white py-1 px-4 border-b border-black/5 shadow-sm flex justify-between items-center absolute top-[64px] left-0 z-20">
+        {/* Top Control Bar (CLEANED - Admin Button Removed) */}
+        <div className="w-full bg-white py-2 px-4 border-b border-black/5 shadow-sm flex justify-between items-center absolute top-[64px] left-0 z-20">
           <div className="flex gap-2">
             <button
               onClick={() => { setIsCartOpen(true); setIsFavOpen(false); }}
@@ -280,19 +231,6 @@ function Products() {
               Wishlist ({favorites.length})
             </button>
           </div>
-
-          <button
-            onClick={() => {
-              setIsAdmin(!isAdmin);
-              localStorage.setItem("shaikh_it_admin", (!isAdmin).toString());
-              showNotification(isAdmin ? "Admin Mode Off" : "👑 Admin Mode Active!");
-            }}
-            className={`text-[10px] font-bold px-3 py-1.5 rounded-lg border flex items-center gap-1 ${
-              isAdmin ? "bg-amber-500 text-black border-amber-400" : "bg-slate-200 text-slate-700"
-            }`}
-          >
-            <ShieldAlert size={12} /> {isAdmin ? "Admin ON" : "Admin OFF"}
-          </button>
         </div>
 
         {/* Content Container */}
@@ -345,9 +283,10 @@ function Products() {
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-black/80 animate-fade-in">
           <div className="relative bg-[#0b1329] text-white w-full max-w-2xl rounded-2xl border border-white/10 shadow-2xl p-5 overflow-y-auto max-h-[90vh]">
+            
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white"
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
             >
               <X className="h-5 w-5" />
             </button>
@@ -379,14 +318,13 @@ function Products() {
 
             <hr className="my-5 border-white/10" />
 
-            {/* REVIEWS & FEEDBACK SECTION */}
+            {/* REVIEWS SECTION */}
             <div className="text-left">
               <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-accent" />
                 Customer Reviews ({productReviews.length})
               </h3>
 
-              {/* Reviews List with Conditional Edit/Delete Actions */}
               <div className="space-y-2 max-h-40 overflow-y-auto mb-4 pr-1">
                 {productReviews.length === 0 ? (
                   <p className="text-xs text-navy-foreground/50 italic">
@@ -414,21 +352,19 @@ function Products() {
                           <p className="text-navy-foreground/80">{rev.comment}</p>
                         </div>
 
-                        {/* 🔒 AUTHOR & ADMIN CONTROL ACTIONS */}
-                        {(isMyReview || isAdmin) && (
+                        {/* Customer Controls Own Review Only */}
+                        {isMyReview && (
                           <div className="flex gap-2">
-                            {isMyReview && (
-                              <button
-                                onClick={() => handleStartEdit(rev)}
-                                className="text-blue-400 hover:text-blue-300 p-1"
-                                title="Edit your review"
-                              >
-                                <Pencil size={13} />
-                              </button>
-                            )}
+                            <button
+                              onClick={() => handleStartEdit(rev)}
+                              className="text-blue-400 hover:text-blue-300 p-1 cursor-pointer"
+                              title="Edit your review"
+                            >
+                              <Pencil size={13} />
+                            </button>
                             <button
                               onClick={() => handleDeleteReview(rev.id)}
-                              className="text-red-400 hover:text-red-300 p-1"
+                              className="text-red-400 hover:text-red-300 p-1 cursor-pointer"
                               title="Delete review"
                             >
                               <Trash2 size={13} />
@@ -451,7 +387,7 @@ function Products() {
                     <button
                       type="button"
                       onClick={() => setEditingReviewId(null)}
-                      className="text-[10px] text-red-400 hover:underline"
+                      className="text-[10px] text-red-400 hover:underline cursor-pointer"
                     >
                       Cancel Edit
                     </button>
@@ -489,7 +425,7 @@ function Products() {
                 ></textarea>
                 <button
                   type="submit"
-                  className="bg-accent hover:bg-accent/90 text-navy font-bold px-4 py-1.5 rounded-lg text-xs transition"
+                  className="bg-accent hover:bg-accent/90 text-navy font-bold px-4 py-1.5 rounded-lg text-xs transition cursor-pointer"
                 >
                   {editingReviewId ? "Update Review" : "Submit Review"}
                 </button>
@@ -508,7 +444,7 @@ function Products() {
                 <h3 className="text-lg font-bold flex items-center gap-2">
                   <ShoppingCart className="h-5 w-5 text-accent" /> Your Cart ({cart.length})
                 </h3>
-                <button onClick={() => setIsCartOpen(false)} className="p-2 text-white/70 hover:text-white">
+                <button onClick={() => setIsCartOpen(false)} className="p-2 text-white/70 hover:text-white cursor-pointer">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -524,7 +460,7 @@ function Products() {
                         <h4 className="text-xs font-bold text-white truncate">{item.name}</h4>
                         <span className="text-xs text-accent font-bold">₹{item.retail_price}</span>
                       </div>
-                      <button onClick={() => removeFromCart(item.id)} className="text-red-400 hover:text-red-500 p-2">
+                      <button onClick={() => removeFromCart(item.id)} className="text-red-400 hover:text-red-500 p-2 cursor-pointer">
                         <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
@@ -548,7 +484,7 @@ function Products() {
                     );
                     window.open(`https://wa.me/917984679052?text=${message}`, "_blank");
                   }}
-                  className="w-full py-3 bg-primary-gradient text-navy-foreground font-black text-xs uppercase tracking-widest rounded-xl hover:shadow-glow transition-all flex items-center justify-center gap-2"
+                  className="w-full py-3 bg-primary-gradient text-navy-foreground font-black text-xs uppercase tracking-widest rounded-xl hover:shadow-glow transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <MessageCircle className="h-4 w-4" /> Send Order via WhatsApp
                 </button>
@@ -567,7 +503,7 @@ function Products() {
                 <h3 className="text-lg font-bold flex items-center gap-2 text-red-400">
                   <Heart className="h-5 w-5 fill-current" /> My Wishlist ({favorites.length})
                 </h3>
-                <button onClick={() => setIsFavOpen(false)} className="p-2 text-white/70 hover:text-white">
+                <button onClick={() => setIsFavOpen(false)} className="p-2 text-white/70 hover:text-white cursor-pointer">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -586,11 +522,11 @@ function Products() {
                       <div className="flex gap-1">
                         <button
                           onClick={() => { addToCart(item); toggleFavorite(item.id); }}
-                          className="p-1.5 bg-white/10 rounded-lg text-xs font-semibold"
+                          className="p-1.5 bg-white/10 rounded-lg text-xs font-semibold cursor-pointer"
                         >
                           + Cart
                         </button>
-                        <button onClick={() => toggleFavorite(item.id)} className="text-red-400 p-1.5">
+                        <button onClick={() => toggleFavorite(item.id)} className="text-red-400 p-1.5 cursor-pointer">
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
