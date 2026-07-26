@@ -11,6 +11,8 @@ import {
   MessageSquare,
   Pencil,
   Sparkles,
+  Tag,
+  ExternalLink,
 } from "lucide-react";
 import { SiteLayout } from "@/components/SiteLayout";
 import { supabase } from "@/lib/supabaseClient";
@@ -37,6 +39,8 @@ interface Product {
   description: string;
   image_url: string;
   is_affiliate?: boolean;
+  amazon_link?: string;
+  flipkart_link?: string;
 }
 
 const getDeviceId = () => {
@@ -77,7 +81,6 @@ function Products() {
     "PERIPHERALS",
     "USB HUB",
     "CCTV SYSTEMS",
-    "PARTNER OFFERS",
   ];
 
   useEffect(() => {
@@ -239,7 +242,7 @@ function Products() {
     <SiteLayout>
       <div className="relative min-h-screen bg-navy text-navy-foreground overflow-hidden pt-32 pb-24 font-sans">
         
-        {/* Cart & Wishlist Bar */}
+        {/* Top Strip Navigation */}
         <div className="w-full bg-[#16223f]/80 backdrop-blur-md py-2 px-4 border-b border-white/10 shadow-md flex justify-between items-center absolute top-[64px] left-0 z-20">
           <div className="flex gap-2">
             <button
@@ -257,13 +260,23 @@ function Products() {
               <Heart className="h-4 w-4 fill-current" />
               Wishlist ({favorites.length})
             </button>
+
+            <button
+              onClick={() => handleCategoryFilter("PARTNER OFFERS")}
+              className={`flex items-center gap-2 px-4 py-1.5 rounded-xl text-xs font-bold uppercase tracking-wider transition cursor-pointer border ${
+                selectedCategory === "PARTNER OFFERS"
+                  ? "bg-amber-400 text-slate-950 font-black border-amber-400 shadow-lg"
+                  : "bg-amber-400/20 text-amber-400 border-amber-400/40 hover:bg-amber-400 hover:text-slate-950"
+              }`}
+            >
+              <Tag className="h-4 w-4" />
+              Partner Offers
+            </button>
           </div>
         </div>
 
         {/* Content Container */}
         <div className="relative mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 z-10">
-          
-          {/* 🌟 ORIGINAL THEME HEADER 🌟 */}
           <div className="text-center max-w-3xl mx-auto mb-8 pt-6">
             <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-400 bg-emerald-500/10 px-3.5 py-1 rounded-full border border-emerald-500/20 mb-4">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -280,7 +293,6 @@ function Products() {
             </p>
           </div>
 
-          {/* 🌟 ORIGINAL DYNAMIC BULK DISCOUNT OFFER BANNER 🌟 */}
           <div className="max-w-4xl mx-auto mb-8 glass p-5 rounded-2xl border border-white/10 shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="space-y-1 text-left">
               <span className="text-[10px] font-bold text-accent uppercase tracking-widest flex items-center gap-1">
@@ -302,7 +314,7 @@ function Products() {
             </button>
           </div>
 
-          {/* 🌟 ORIGINAL CATEGORY FILTER BUTTONS 🌟 */}
+          {/* Category Filter Buttons */}
           <div className="flex items-center justify-center gap-2 overflow-x-auto pb-6 mb-6 no-scrollbar">
             {categories.map((cat) => (
               <button
@@ -338,9 +350,13 @@ function Products() {
                       alt={item.name}
                       className="w-full h-full object-contain group-hover:scale-105 transition-transform"
                     />
+                    {item.is_affiliate && (
+                      <span className="absolute top-2 right-2 bg-amber-400 text-slate-950 text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow">
+                        Partner Deal
+                      </span>
+                    )}
                   </div>
 
-                  {/* Original Dark Strip Title Below Image */}
                   <div className="p-3 glass-dark text-center">
                     <h3 className="text-[11px] font-extrabold text-white uppercase tracking-wide truncate">
                       {item.name}
@@ -353,46 +369,60 @@ function Products() {
         </div>
       </div>
 
-      {/* Product Details Modal */}
+      {/* Product Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md bg-black/80 animate-fade-in">
-          <div className="relative bg-[#0b1329] text-white w-full max-w-2xl rounded-2xl border border-white/10 shadow-2xl p-5 overflow-y-auto max-h-[90vh]">
+          <div className="relative bg-[#0b1329] text-white w-full max-w-lg rounded-2xl border border-white/10 shadow-2xl p-5 overflow-y-auto max-h-[90vh]">
             <button
               onClick={() => setSelectedProduct(null)}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer"
+              className="absolute top-3 right-3 p-1.5 rounded-full bg-white/10 hover:bg-white/20 text-white cursor-pointer z-10"
             >
               <X className="h-5 w-5" />
             </button>
 
-            <div className="grid md:grid-cols-2 gap-5">
-              <div className="flex items-center justify-center p-3 bg-white rounded-xl h-48">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center justify-center p-3 bg-white rounded-xl h-48 w-full">
                 <img
                   src={selectedProduct.image_url}
                   alt={selectedProduct.name}
-                  className="max-h-full object-contain"
+                  className="max-h-full max-w-full object-contain"
                 />
               </div>
 
-              <div className="flex flex-col justify-between text-left">
-                <div>
-                  <h2 className="text-base font-bold text-white mb-1">
-                    {selectedProduct.name}
-                  </h2>
-                  <div className="text-xl font-extrabold text-accent mb-2">
+              <div className="text-left">
+                <h2 className="text-sm font-bold text-white mb-1">
+                  {selectedProduct.name}
+                </h2>
+
+                {/* Price Display Fix for All Products */}
+                {selectedProduct.retail_price > 0 && (
+                  <div className="text-lg font-extrabold text-accent mb-2">
                     ₹{selectedProduct.retail_price}
                   </div>
-                  <p className="text-xs text-navy-foreground/80 leading-relaxed bg-white/5 p-3 rounded-xl max-h-24 overflow-y-auto">
-                    {selectedProduct.description}
-                  </p>
-                </div>
+                )}
+
+                <p className="text-xs text-navy-foreground/80 leading-relaxed bg-white/5 p-3 rounded-xl max-h-24 overflow-y-auto mt-2">
+                  {selectedProduct.description || "Verified hardware quality."}
+                </p>
 
                 <div className="flex gap-2 mt-4">
-                  <button
-                    onClick={() => addToCart(selectedProduct)}
-                    className="flex-1 bg-primary-gradient text-navy-foreground font-bold py-2 rounded-xl text-xs transition cursor-pointer"
-                  >
-                    Add to Cart
-                  </button>
+                  {selectedProduct.is_affiliate ? (
+                    <a
+                      href={selectedProduct.amazon_link || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black py-2.5 rounded-xl text-xs transition cursor-pointer text-center uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg"
+                    >
+                      <ExternalLink size={14} /> Buy Best Price on Amazon
+                    </a>
+                  ) : (
+                    <button
+                      onClick={() => addToCart(selectedProduct)}
+                      className="flex-1 bg-primary-gradient text-navy-foreground font-bold py-2 rounded-xl text-xs transition cursor-pointer"
+                    >
+                      Add to Cart
+                    </button>
+                  )}
                   <button
                     onClick={() => toggleFavorite(selectedProduct.id)}
                     className="p-2 border border-white/10 rounded-xl hover:bg-white/10 cursor-pointer"
@@ -403,23 +433,22 @@ function Products() {
               </div>
             </div>
 
-            <hr className="my-5 border-white/10" />
+            <hr className="my-4 border-white/10" />
 
-            {/* Reviews Section */}
             <div className="text-left">
-              <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+              <h3 className="text-xs font-bold text-white mb-2 flex items-center gap-2">
                 <MessageSquare className="h-4 w-4 text-accent" />
                 Customer Reviews ({productReviews.length})
               </h3>
 
-              <div className="space-y-2 max-h-40 overflow-y-auto mb-4 pr-1">
+              <div className="space-y-2 max-h-32 overflow-y-auto mb-3 pr-1">
                 {productReviews.length === 0 ? (
                   <p className="text-xs text-navy-foreground/50 italic">No reviews yet.</p>
                 ) : (
                   productReviews.map((rev) => {
                     const isMyReview = rev.user_device_id === deviceId;
                     return (
-                      <div key={rev.id} className="bg-white/5 p-2.5 rounded-xl border border-white/5 text-xs flex justify-between items-start">
+                      <div key={rev.id} className="bg-white/5 p-2 rounded-xl border border-white/5 text-xs flex justify-between items-start">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <span className="font-semibold text-white">{rev.user_name}</span>
@@ -429,8 +458,8 @@ function Products() {
                         </div>
                         {isMyReview && (
                           <div className="flex gap-2">
-                            <button onClick={() => handleStartEdit(rev)} className="text-blue-400 p-1 cursor-pointer"><Pencil size={13} /></button>
-                            <button onClick={() => handleDeleteReview(rev.id)} className="text-red-400 p-1 cursor-pointer"><Trash2 size={13} /></button>
+                            <button onClick={() => handleStartEdit(rev)} className="text-blue-400 p-1 cursor-pointer"><Pencil size={12} /></button>
+                            <button onClick={() => handleDeleteReview(rev.id)} className="text-red-400 p-1 cursor-pointer"><Trash2 size={12} /></button>
                           </div>
                         )}
                       </div>
@@ -440,20 +469,15 @@ function Products() {
               </div>
 
               <form onSubmit={handleSaveReview} className="bg-white/5 p-3 rounded-xl border border-white/10 space-y-2">
-                <div className="flex justify-between items-center">
-                  <h4 className="text-[11px] font-bold text-white uppercase">
-                    {editingReviewId ? "✏️ Edit Your Feedback" : "Leave A Review"}
-                  </h4>
-                </div>
                 <div className="grid grid-cols-2 gap-2">
                   <input
                     type="text" required placeholder="Your Name" value={reviewName}
                     onChange={(e) => setReviewName(e.target.value)}
-                    className="bg-navy border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none"
+                    className="bg-navy border border-white/10 rounded-lg p-1.5 text-xs text-white focus:outline-none"
                   />
                   <select
                     value={reviewRating} onChange={(e) => setReviewRating(Number(e.target.value))}
-                    className="bg-navy border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none"
+                    className="bg-navy border border-white/10 rounded-lg p-1.5 text-xs text-white focus:outline-none"
                   >
                     <option value={5}>⭐⭐⭐⭐⭐ (5 Star)</option>
                     <option value={4}>⭐⭐⭐⭐ (4 Star)</option>
@@ -465,9 +489,9 @@ function Products() {
                 <textarea
                   required rows={2} placeholder="Write feedback..." value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
-                  className="w-full bg-navy border border-white/10 rounded-lg p-2 text-xs text-white focus:outline-none"
+                  className="w-full bg-navy border border-white/10 rounded-lg p-1.5 text-xs text-white focus:outline-none"
                 ></textarea>
-                <button type="submit" className="bg-primary-gradient text-navy-foreground font-bold px-4 py-1.5 rounded-lg text-xs transition cursor-pointer">
+                <button type="submit" className="bg-primary-gradient text-navy-foreground font-bold px-3 py-1 rounded-lg text-xs transition cursor-pointer">
                   {editingReviewId ? "Update Review" : "Submit Review"}
                 </button>
               </form>

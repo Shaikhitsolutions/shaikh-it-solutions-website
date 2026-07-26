@@ -8,7 +8,6 @@ import {
   Loader2,
   XCircle,
   Link2,
-  ShoppingBag,
   MessageSquare,
   RefreshCw,
 } from "lucide-react";
@@ -30,8 +29,6 @@ interface Product {
   is_affiliate?: boolean;
   amazon_link?: string;
   flipkart_link?: string;
-  shopsy_link?: string;
-  coupon_code?: string;
 }
 
 interface Review {
@@ -63,13 +60,9 @@ function AdminPage() {
   // Affiliate States
   const [isAffiliate, setIsAffiliate] = useState(false);
   const [amazonLink, setAmazonLink] = useState("");
-  const [flipkartLink, setFlipkartLink] = useState("");
-  const [shopsyLink, setShopsyLink] = useState("");
-  const [couponCode, setCouponCode] = useState("");
 
   // Reviews Admin States
   const [reviews, setReviews] = useState<Review[]>([]);
-  const [reviewsLoading, setReviewsLoading] = useState(true);
 
   const fetchAdminProducts = async () => {
     try {
@@ -90,19 +83,14 @@ function AdminPage() {
 
   const fetchAdminReviews = async () => {
     try {
-      setReviewsLoading(true);
       const { data, error } = await supabase
         .from("reviews")
         .select("*")
         .order("created_at", { ascending: false });
 
-      if (!error && data) {
-        setReviews(data);
-      }
+      if (!error && data) setReviews(data);
     } catch (err: any) {
       console.error("Error loading reviews:", err.message);
-    } finally {
-      setReviewsLoading(false);
     }
   };
 
@@ -146,9 +134,6 @@ function AdminPage() {
 
     setIsAffiliate(false);
     setAmazonLink("");
-    setFlipkartLink("");
-    setShopsyLink("");
-    setCouponCode("");
   };
 
   const startEditProduct = (item: Product) => {
@@ -156,8 +141,8 @@ function AdminPage() {
     setEditProductId(item.id);
     setProdName(item.name);
     setCategory(item.category);
-    setWholesalePrice(item.wholesale_price.toString());
-    setRetailPrice(item.retail_price.toString());
+    setWholesalePrice(item.wholesale_price ? item.wholesale_price.toString() : "0");
+    setRetailPrice(item.retail_price ? item.retail_price.toString() : "0");
     setDescription(item.description || "");
     setExistingImageUrl(item.image_url);
     setImagePreview(item.image_url);
@@ -165,9 +150,6 @@ function AdminPage() {
 
     setIsAffiliate(!!item.is_affiliate);
     setAmazonLink(item.amazon_link || "");
-    setFlipkartLink(item.flipkart_link || "");
-    setShopsyLink(item.shopsy_link || "");
-    setCouponCode(item.coupon_code || "");
 
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -175,6 +157,7 @@ function AdminPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+
     try {
       let finalImageUrl = existingImageUrl;
 
@@ -195,7 +178,7 @@ function AdminPage() {
 
         finalImageUrl = urlData.publicUrl;
       } else if (!isEditing && !imageFile) {
-        alert("Please upload product photos!");
+        alert("Kripya Product Image select karein!");
         setLoading(false);
         return;
       }
@@ -203,15 +186,12 @@ function AdminPage() {
       const productPayload = {
         name: prodName,
         category: category,
-        wholesale_price: parseInt(wholesalePrice),
-        retail_price: parseInt(retailPrice),
+        wholesale_price: wholesalePrice ? parseInt(wholesalePrice) : 0,
+        retail_price: retailPrice ? parseInt(retailPrice) : 0,
         description: description,
         image_url: finalImageUrl,
         is_affiliate: isAffiliate,
         amazon_link: isAffiliate ? amazonLink : null,
-        flipkart_link: isAffiliate ? flipkartLink : null,
-        shopsy_link: isAffiliate ? shopsyLink : null,
-        coupon_code: isAffiliate ? couponCode : null,
       };
 
       if (isEditing && editProductId) {
@@ -221,14 +201,14 @@ function AdminPage() {
           .eq("id", editProductId);
 
         if (updateError) throw updateError;
-        alert(`✏️ Details successfully updated for "${prodName}"!`);
+        alert(`✏️ Product successfully updated!`);
       } else {
         const { error: dbError } = await supabase
           .from("products")
           .insert([productPayload]);
 
         if (dbError) throw dbError;
-        alert(`🎉 Congratulations! "${prodName}" successfully added to your inventory.`);
+        alert(`🎉 Product successfully added!`);
       }
 
       resetFormState();
@@ -241,17 +221,13 @@ function AdminPage() {
   };
 
   const handleDeleteProduct = async (id: number, name: string) => {
-    const confirmDelete = window.confirm(
-      `Kya aap sach me "${name}" ko website se delete karna chahte hain?`
-    );
-    if (!confirmDelete) return;
+    if (!window.confirm(`Delete "${name}"?`)) return;
 
     try {
       const { error } = await supabase.from("products").delete().eq("id", id);
-
       if (error) throw error;
 
-      alert("🗑️ Product website se hata diya gaya hai!");
+      alert("🗑️ Product deleted!");
       if (editProductId === id) resetFormState();
       fetchAdminProducts();
     } catch (err: any) {
@@ -259,73 +235,69 @@ function AdminPage() {
     }
   };
 
-  // Delete Customer Review Function
   const handleDeleteReview = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this customer review?")) return;
+    if (!confirm("Delete this review?")) return;
 
     try {
       const { error } = await supabase.from("reviews").delete().eq("id", id);
       if (error) throw error;
 
-      alert("🗑️ Review successfully deleted!");
+      alert("🗑️ Review deleted!");
       fetchAdminReviews();
     } catch (err: any) {
       alert(`Delete error: ${err.message}`);
     }
   };
 
+  const localProducts = existingProducts.filter((p) => !p.is_affiliate);
+  const affiliateProducts = existingProducts.filter((p) => p.is_affiliate);
+
   return (
     <SiteLayout>
       <div className="relative min-h-screen bg-navy text-navy-foreground overflow-hidden py-24 font-sans">
-        <div className="absolute inset-0 bg-dot opacity-[0.05]" />
-
         <div className="relative max-w-4xl mx-auto px-4 sm:px-6 z-10">
-          {/* Header */}
-          <div className="text-center mb-12">
+          
+          <div className="text-center mb-10">
             <span className="text-xs font-semibold uppercase tracking-widest text-accent bg-accent/10 px-4 py-1.5 rounded-full border border-white/5">
-              Secure Interface Console
+              Secure Console
             </span>
-            <h1 className="text-3xl sm:text-4xl font-bold text-white mt-4">
+            <h1 className="text-3xl font-bold text-white mt-3">
               Shaikh.IT Master Dashboard
             </h1>
-            <p className="text-navy-foreground/70 mt-2 text-sm">
-              Synchronize active storage units and update structural peripheral info.
-            </p>
           </div>
 
-          {/* Form and Image Wrapper */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-12">
             <div
-              className={`lg:col-span-2 glass p-6 rounded-2xl border transition-all duration-300 ${
+              className={`lg:col-span-2 glass p-6 rounded-2xl border transition-all ${
                 isEditing
-                  ? "border-accent bg-navy-deep/60 shadow-glow"
+                  ? "border-amber-400/80 bg-amber-500/5 shadow-lg"
                   : "border-white/10 bg-navy-deep/40"
               }`}
             >
               <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <h2 className="text-base font-bold text-white flex items-center gap-2">
                   <PlusCircle className="h-5 w-5 text-accent" />
-                  {isEditing ? "Modify Core Properties" : "Register New Peripheral"}
+                  {isEditing ? "✏️ Mode: Editing Product" : "Register New Peripheral"}
                 </h2>
                 {isEditing && (
                   <button
                     onClick={resetFormState}
-                    className="flex items-center gap-1 text-xs text-red-400 hover:text-red-300 font-semibold transition-colors"
+                    className="flex items-center gap-1 text-xs bg-red-500/20 text-red-400 px-3 py-1 rounded-lg hover:bg-red-500 hover:text-white transition-all cursor-pointer font-semibold"
                   >
-                    <XCircle className="h-4 w-4" /> Cancel Session
+                    <XCircle className="h-4 w-4" /> Cancel Edit
                   </button>
                 )}
               </div>
 
-              <form onSubmit={handleSubmit} className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1.5">
-                    Distribution Channels
+                  <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1">
+                    Distribution Channel
                   </label>
                   <select
                     value={isAffiliate ? "affiliate" : "normal"}
                     onChange={(e) => setIsAffiliate(e.target.value === "affiliate")}
-                    className="w-full glass-dark border border-white/10 rounded-xl px-3 py-3 text-white focus:outline-none focus:border-white/20 text-sm"
+                    className="w-full glass-dark border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none"
                   >
                     <option value="normal">Normal Product (Local Stock)</option>
                     <option value="affiliate">
@@ -335,183 +307,138 @@ function AdminPage() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1.5">
-                    Product Name
+                  <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1">
+                    Product Title
                   </label>
                   <input
                     type="text"
                     required
                     value={prodName}
                     onChange={(e) => setProdName(e.target.value)}
-                    placeholder="e.g., Quantron QKB11 USB Keyboard"
-                    className="w-full glass-dark border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 placeholder-white/20 text-sm transition-all"
+                    placeholder="e.g. Zebronics 256GB Internal SSD"
+                    className="w-full glass-dark border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none placeholder-white/20"
                   />
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1.5">
+                    <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1">
                       Category
                     </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value)}
-                      className="w-full glass-dark border border-white/10 rounded-xl px-3 py-3 text-white focus:outline-none focus:border-white/20 text-sm"
+                      className="w-full glass-dark border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs focus:outline-none"
                     >
                       <option>Keyboard</option>
                       <option>Mouse</option>
                       <option>Peripherals</option>
                       <option>USB Hub</option>
                       <option>CCTV Systems</option>
-                      <option>Powerbank</option>
-                      <option>Speakers & Headphones</option>
-                      <option>Cooling Pad</option>
-                      <option>Charger</option>
                       <option>Networking</option>
                       <option>Accessories</option>
-                      <option>Other</option>
                     </select>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1.5">
-                      Wholesale Cost
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={wholesalePrice}
-                      onChange={(e) => handleWholesaleChange(e.target.value)}
-                      placeholder="175"
-                      className="w-full glass-dark border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 placeholder-white/20 text-sm"
-                    />
-                  </div>
+                  {!isAffiliate && (
+                    <div>
+                      <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1">
+                        Wholesale Cost (₹)
+                      </label>
+                      <input
+                        type="text"
+                        value={wholesalePrice}
+                        onChange={(e) => handleWholesaleChange(e.target.value)}
+                        placeholder="0"
+                        className="w-full glass-dark border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none"
+                      />
+                    </div>
+                  )}
 
                   <div>
-                    <label className="block text-xs font-bold uppercase tracking-wider text-accent mb-1.5">
-                      Retail Price (+30%)
+                    <label className="block text-xs font-bold uppercase tracking-wider text-accent mb-1">
+                      {isAffiliate ? "Offer / Deal Price (₹)" : "Retail Price (₹)"}
                     </label>
                     <input
                       type="text"
-                      required
                       value={retailPrice}
                       onChange={(e) => setRetailPrice(e.target.value)}
-                      placeholder="228"
-                      className="w-full glass-dark border border-accent/30 text-accent font-bold rounded-xl px-4 py-3 text-sm focus:outline-none"
+                      placeholder="0"
+                      className="w-full glass-dark border border-accent/30 text-accent font-bold rounded-xl px-3.5 py-2.5 text-xs focus:outline-none"
                     />
                   </div>
                 </div>
 
                 {isAffiliate && (
-                  <div className="p-4 rounded-xl border border-accent/20 bg-accent/5 space-y-4 animate-fadeIn">
-                    <h3 className="text-xs font-bold uppercase text-accent tracking-widest flex items-center gap-1.5">
-                      <Link2 className="h-4 w-4" /> Affiliate URL Router Configuration
+                  <div className="p-3.5 rounded-xl border border-amber-400/30 bg-amber-500/10 space-y-3">
+                    <h3 className="text-xs font-bold uppercase text-amber-400 tracking-widest flex items-center gap-1.5">
+                      <Link2 className="h-4 w-4" /> Amazon Direct Affiliate Link
                     </h3>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[11px] font-bold text-navy-foreground/80 mb-1">
-                          Amazon Link
-                        </label>
-                        <input
-                          type="text"
-                          value={amazonLink}
-                          onChange={(e) => setAmazonLink(e.target.value)}
-                          placeholder="https://amazon.in/dp/..."
-                          className="w-full glass-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-navy-foreground/80 mb-1">
-                          Flipkart Link
-                        </label>
-                        <input
-                          type="text"
-                          value={flipkartLink}
-                          onChange={(e) => setFlipkartLink(e.target.value)}
-                          placeholder="https://flipkart.com/..."
-                          className="w-full glass-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-[11px] font-bold text-navy-foreground/80 mb-1">
-                          Shopsy/Meesho Link
-                        </label>
-                        <input
-                          type="text"
-                          value={shopsyLink}
-                          onChange={(e) => setShopsyLink(e.target.value)}
-                          placeholder="https://shopsy.in/..."
-                          className="w-full glass-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-bold text-navy-foreground/80 mb-1">
-                          Exclusive Coupon Code
-                        </label>
-                        <input
-                          type="text"
-                          value={couponCode}
-                          onChange={(e) => setCouponCode(e.target.value)}
-                          placeholder="e.g. SHAIKHIT05"
-                          className="w-full glass-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
-                        />
-                      </div>
+                    <div>
+                      <label className="block text-[10px] font-bold text-navy-foreground/80 mb-1">
+                        Amazon Product Link
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={amazonLink}
+                        onChange={(e) => setAmazonLink(e.target.value)}
+                        placeholder="Paste Amazon affiliate link"
+                        className="w-full glass-dark border border-white/10 rounded-lg px-3 py-2 text-xs text-white focus:outline-none"
+                      />
                     </div>
                   </div>
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1.5">
+                  <label className="block text-xs font-bold uppercase tracking-wider text-navy-foreground/70 mb-1">
                     Short Description
                   </label>
                   <textarea
                     rows={2}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Specification logs and warranty bounds..."
-                    className="w-full glass-dark border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-white/20 placeholder-white/20 text-sm"
+                    placeholder="Short specs..."
+                    className="w-full glass-dark border border-white/10 rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none placeholder-white/20"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-primary-gradient text-navy-foreground font-bold py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all shadow-card-soft hover:shadow-glow disabled:opacity-40 uppercase text-xs tracking-wider cursor-pointer"
+                  className={`w-full font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md uppercase text-xs tracking-wider cursor-pointer ${
+                    isEditing
+                      ? "bg-amber-400 text-slate-900 hover:bg-amber-300"
+                      : "bg-primary-gradient text-navy-foreground hover:shadow-glow"
+                  }`}
                 >
                   {loading ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : isEditing ? (
-                    "Commit Structural Updates"
+                    "Save Changes"
                   ) : (
-                    "Deploy Live Storage Node"
+                    "Deploy Product"
                   )}
                 </button>
               </form>
             </div>
 
-            {/* Photo Preview Upload Panel */}
             <div className="glass p-6 rounded-2xl border border-white/10 bg-navy-deep/40 text-center flex flex-col justify-center items-center min-h-[200px]">
               <label className="cursor-pointer w-full h-full flex flex-col justify-center items-center">
                 {imagePreview ? (
-                  <div className="relative w-full h-44 rounded-xl overflow-hidden bg-navy-deep/80 border border-white/5">
+                  <div className="relative w-full h-44 rounded-xl overflow-hidden bg-white/10 border border-white/10 p-2">
                     <img
                       src={imagePreview}
                       alt="Preview"
-                      className="w-full h-full object-contain p-2"
+                      className="w-full h-full object-contain"
                     />
-                    <span className="absolute bottom-2 left-1/2 -translate-x-1/2 glass-dark text-[9px] font-bold text-white px-3 py-1 rounded-full border border-white/10 uppercase tracking-widest shadow-md">
-                      Modify Asset
-                    </span>
                   </div>
                 ) : (
-                  <div className="py-4">
-                    <UploadCloud className="h-8 w-8 text-accent/60 mx-auto mb-2" />
-                    <span className="text-xs text-white font-medium block uppercase tracking-wider">
-                      Upload Asset
+                  <div className="py-4 space-y-2">
+                    <UploadCloud className="h-10 w-10 text-accent mx-auto" />
+                    <span className="text-xs text-white font-bold block uppercase tracking-wider">
+                      Click To Select Image
                     </span>
                   </div>
                 )}
@@ -525,70 +452,41 @@ function AdminPage() {
             </div>
           </div>
 
-          {/* Active Cloud Catalog Management Grid */}
-          <div className="glass p-6 rounded-2xl border border-white/10 bg-navy-deep/40 shadow-xl mb-12">
-            <h2 className="text-sm font-bold uppercase tracking-widest text-white mb-6 border-b border-white/5 pb-4">
-              📦 Registered Inventory Units ({existingProducts.length})
+          <div className="glass p-6 rounded-2xl border border-white/10 bg-navy-deep/40 shadow-xl mb-8">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-white mb-6 border-b border-white/5 pb-4 flex items-center gap-2">
+              📦 Local Shop Stock ({localProducts.length})
             </h2>
 
             {fetchLoading ? (
-              <div className="text-center py-10 gap-2 flex items-center justify-center text-navy-foreground/50 text-xs uppercase tracking-wider">
-                <Loader2 className="h-4 w-4 animate-spin text-accent" /> Reading Database
-                Nodes...
-              </div>
-            ) : existingProducts.length === 0 ? (
-              <div className="text-center py-8 text-navy-foreground/40 text-xs uppercase">
-                No Active Logs Detected.
-              </div>
+              <div className="text-center py-6 text-xs"><Loader2 className="h-4 w-4 animate-spin text-accent inline" /> Loading...</div>
+            ) : localProducts.length === 0 ? (
+              <div className="text-xs text-white/40 italic">No local inventory logged.</div>
             ) : (
-              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                {existingProducts.map((item) => (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                {localProducts.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between bg-navy-deep/60 p-3 rounded-xl border border-white/5 hover:border-white/10 transition-all duration-200"
+                    className={`flex items-center justify-between p-3 rounded-xl border bg-navy-deep/60 border-white/5 ${
+                      editProductId === item.id ? "border-amber-400 bg-amber-500/10" : ""
+                    }`}
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3">
                       <img
                         src={item.image_url}
                         alt={item.name}
-                        className="w-12 h-12 object-contain bg-navy/80 rounded-lg p-1.5 border border-white/5 shadow-inner"
+                        className="w-10 h-10 object-contain bg-white rounded-lg p-1"
                       />
                       <div>
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="text-sm font-bold text-white line-clamp-1">
-                            {item.name}
-                          </h4>
-                          {item.is_affiliate && (
-                            <span className="flex items-center text-[9px] font-bold text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20 uppercase tracking-wider gap-0.5">
-                              <ShoppingBag className="h-2.5 w-2.5" /> Partner
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-navy-foreground/70 font-medium tracking-wide mt-0.5">
-                          {item.category} • Cost:{" "}
-                          <span className="text-white/60">₹{item.wholesale_price}</span> •{" "}
-                          <span className="text-accent font-semibold">
-                            Retail: ₹{item.retail_price}
-                          </span>
+                        <h4 className="text-xs font-bold text-white truncate max-w-[250px] sm:max-w-[350px]">{item.name}</h4>
+                        <p className="text-[10px] text-navy-foreground/70">
+                          {item.category} • Cost: ₹{item.wholesale_price} | Retail: ₹{item.retail_price}
                         </p>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => startEditProduct(item)}
-                        className="p-2.5 rounded-xl glass-dark text-accent hover:bg-white hover:text-navy transition-all duration-200 border border-white/5 cursor-pointer"
-                        title="Edit Properties"
-                      >
-                        <Edit2 className="h-3.5 w-3.5" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteProduct(item.id, item.name)}
-                        className="p-2.5 rounded-xl bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white transition-all duration-200 border border-red-500/10 cursor-pointer"
-                        title="Purge Node"
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      <button onClick={() => startEditProduct(item)} className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white cursor-pointer"><Edit2 size={13} /></button>
+                      <button onClick={() => handleDeleteProduct(item.id, item.name)} className="p-2 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white cursor-pointer"><Trash2 size={13} /></button>
                     </div>
                   </div>
                 ))}
@@ -596,66 +494,77 @@ function AdminPage() {
             )}
           </div>
 
-          {/* 🌟 REVIEWS & FEEDBACKS MODERATION PANEL 🌟 */}
+          <div className="glass p-6 rounded-2xl border border-amber-400/30 bg-amber-500/5 shadow-xl mb-12">
+            <h2 className="text-sm font-bold uppercase tracking-widest text-amber-400 mb-6 border-b border-amber-400/20 pb-4 flex items-center gap-2">
+              🏷️ Partner Affiliate Deals (Amazon) ({affiliateProducts.length})
+            </h2>
+
+            {fetchLoading ? (
+              <div className="text-center py-6 text-xs"><Loader2 className="h-4 w-4 animate-spin text-amber-400 inline" /> Loading...</div>
+            ) : affiliateProducts.length === 0 ? (
+              <div className="text-xs text-amber-400/50 italic">No partner deals active.</div>
+            ) : (
+              <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
+                {affiliateProducts.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex items-center justify-between p-3 rounded-xl border bg-slate-900/80 border-amber-400/30 ${
+                      editProductId === item.id ? "border-amber-400 bg-amber-500/20" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className="w-10 h-10 object-contain bg-white rounded-lg p-1"
+                      />
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-xs font-bold text-white truncate max-w-[220px] sm:max-w-[320px]">{item.name}</h4>
+                          <span className="text-[8px] font-black text-amber-400 bg-amber-400/20 px-1.5 py-0.5 rounded border border-amber-400/30">AMAZON DEAL</span>
+                        </div>
+                        <p className="text-[10px] text-amber-400/70 truncate max-w-[250px]">
+                          Price: ₹{item.retail_price || "0"}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => startEditProduct(item)} className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500 hover:text-white cursor-pointer"><Edit2 size={13} /></button>
+                      <button onClick={() => handleDeleteProduct(item.id, item.name)} className="p-2 rounded-lg bg-red-600/20 text-red-400 hover:bg-red-600 hover:text-white cursor-pointer"><Trash2 size={13} /></button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="glass p-6 rounded-2xl border border-white/10 bg-navy-deep/40 shadow-xl">
             <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-              <div className="flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-accent" />
-                <h2 className="text-sm font-bold uppercase tracking-widest text-white">
-                  Customer Feedbacks & Reviews ({reviews.length})
-                </h2>
-              </div>
-              <button
-                onClick={fetchAdminReviews}
-                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 text-xs px-3 py-1.5 rounded-xl border border-white/10 text-white transition cursor-pointer"
-              >
-                <RefreshCw size={13} /> Refresh List
+              <h2 className="text-sm font-bold uppercase tracking-widest text-white">
+                Customer Reviews ({reviews.length})
+              </h2>
+              <button onClick={fetchAdminReviews} className="flex items-center gap-1 bg-white/10 text-xs px-3 py-1.5 rounded-xl text-white cursor-pointer">
+                <RefreshCw size={12} /> Refresh
               </button>
             </div>
 
-            {reviewsLoading ? (
-              <div className="text-center py-8 gap-2 flex items-center justify-center text-navy-foreground/50 text-xs uppercase tracking-wider">
-                <Loader2 className="h-4 w-4 animate-spin text-accent" /> Reading Reviews
-                Node...
-              </div>
-            ) : reviews.length === 0 ? (
-              <div className="text-center py-8 text-navy-foreground/40 text-xs uppercase">
-                No Customer Reviews Recorded.
-              </div>
-            ) : (
-              <div className="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                {reviews.map((rev) => (
-                  <div
-                    key={rev.id}
-                    className="flex items-center justify-between bg-navy-deep/60 p-3.5 rounded-xl border border-white/5 hover:border-white/10 transition-all duration-200"
-                  >
-                    <div className="flex-1 pr-4">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-bold text-white">{rev.user_name}</span>
-                        <span className="text-[10px] font-mono text-accent bg-accent/10 px-1.5 py-0.5 rounded border border-accent/20">
-                          Product ID #{rev.product_id}
-                        </span>
-                        <span className="text-amber-400 font-bold text-xs">
-                          ★ {rev.rating}/5
-                        </span>
-                      </div>
-                      <p className="text-xs text-navy-foreground/80 leading-relaxed">
-                        {rev.comment}
-                      </p>
-                    </div>
-
-                    <button
-                      onClick={() => handleDeleteReview(rev.id)}
-                      className="p-2.5 rounded-xl bg-red-600/10 text-red-400 hover:bg-red-600 hover:text-white transition-all duration-200 border border-red-500/10 cursor-pointer shrink-0"
-                      title="Delete Customer Review"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+            {reviews.map((rev) => (
+              <div key={rev.id} className="flex items-center justify-between bg-navy-deep/60 p-3 rounded-xl border border-white/5 mb-2">
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold text-white">{rev.user_name}</span>
+                    <span className="text-amber-400 font-bold text-xs">★ {rev.rating}/5</span>
                   </div>
-                ))}
+                  <p className="text-xs text-navy-foreground/80">{rev.comment}</p>
+                </div>
+                <button onClick={() => handleDeleteReview(rev.id)} className="p-2 text-red-400 hover:text-red-500 cursor-pointer">
+                  <Trash2 className="h-4 w-4" />
+                </button>
               </div>
-            )}
+            ))}
           </div>
+
         </div>
       </div>
     </SiteLayout>
