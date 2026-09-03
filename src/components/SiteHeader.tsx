@@ -3,15 +3,6 @@ import { useState, useEffect } from "react";
 import { Menu, X, Cpu } from "lucide-react";
 import logo from "@/assets/image/logo.png";
 
-const nav = [
-  { to: "/", label: "Home" },
-  { to: "/about", label: "About" },
-  { to: "/services", label: "Services" },
-  { to: "/products", label: "Products" },
-  { to: "/portfolio", label: "Portfolio" },
-  { to: "/contact", label: "Contact" },
-] as const;
-
 export function SiteHeader() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -34,11 +25,11 @@ export function SiteHeader() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center h-16 lg:h-20 gap-4">
           <Link to="/" className="flex min-w-0 items-center gap-2.5 group">
-          <img
-  src={logo}
-  alt="Shaikh.IT Solutions"
-  className="w-20 h-20 object-contain"
-/>
+            <img
+              src={logo}
+              alt="Shaikh.IT Solutions"
+              className="w-20 h-20 object-contain"
+            />
             <div className="min-w-0">
               <div className="font-display font-bold text-base sm:text-lg leading-tight truncate text-foreground">
                 Shaikh.IT
@@ -50,17 +41,60 @@ export function SiteHeader() {
           </Link>
 
           <nav className="hidden lg:flex items-center gap-1">
-            {nav.map((n) => (
-              <Link
-                key={n.to}
-                to={n.to}
-                className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
-                activeProps={{ className: "px-4 py-2 text-sm font-semibold text-foreground bg-secondary rounded-lg" }}
-                activeOptions={{ exact: n.to === "/" }}
-              >
-                {n.label}
-              </Link>
-            ))}
+            <Link
+              to="/"
+              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+              activeProps={{ className: "px-4 py-2 text-sm font-semibold text-foreground bg-secondary rounded-lg" }}
+              activeOptions={{ exact: true }}
+            >
+              Home
+            </Link>
+            <Link
+              to="/about"
+              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+              activeProps={{ className: "px-4 py-2 text-sm font-semibold text-foreground bg-secondary rounded-lg" }}
+            >
+              About
+            </Link>
+
+            {/* SOFTWARES TAB LINKED TO /softwares PAGE */}
+            <Link
+              to="/softwares"
+              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors flex items-center gap-1.5"
+              activeProps={{ className: "px-4 py-2 text-sm font-semibold text-foreground bg-secondary rounded-lg" }}
+            >
+              <Cpu className="h-4 w-4" /> Softwares
+            </Link>
+
+            <Link
+              to="/services"
+              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+              activeProps={{ className: "px-4 py-2 text-sm font-semibold text-foreground bg-secondary rounded-lg" }}
+            >
+              Services
+            </Link>
+            <Link
+              to="/products"
+              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+              activeProps={{ className: "px-4 py-2 text-sm font-semibold text-foreground bg-secondary rounded-lg" }}
+            >
+              Products
+            </Link>
+            <Link
+              to="/portfolio"
+              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+              activeProps={{ className: "px-4 py-2 text-sm font-semibold text-foreground bg-secondary rounded-lg" }}
+            >
+              Portfolio
+            </Link>
+            <Link
+              to="/contact"
+              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground rounded-lg hover:bg-secondary transition-colors"
+              activeProps={{ className: "px-4 py-2 text-sm font-semibold text-foreground bg-secondary rounded-lg" }}
+            >
+              Contact
+            </Link>
+
             <Link
               to="/contact"
               className="ml-3 inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-lg bg-primary-gradient text-navy-foreground shadow-card-soft hover:shadow-glow transition-all"
@@ -81,18 +115,58 @@ export function SiteHeader() {
         {open && (
           <div className="lg:hidden pb-4 animate-fade-in">
             <nav className="flex flex-col gap-1 pt-2">
-              {nav.map((n) => (
-                <Link
-                  key={n.to}
-                  to={n.to}
-                  onClick={() => setOpen(false)}
-                  className="px-4 py-3 text-sm font-medium rounded-lg hover:bg-secondary"
-                  activeProps={{ className: "px-4 py-3 text-sm font-semibold rounded-lg bg-secondary" }}
-                  activeOptions={{ exact: n.to === "/" }}
-                >
-                  {n.label}
-                </Link>
-              ))}
+              <Link
+                to="/"
+                onClick={() => setOpen(false)}
+                className="px-4 py-3 text-sm font-medium rounded-lg hover:bg-secondary"
+              >
+                Home
+              </Link>
+              <Link
+                to="/about"
+                onClick={() => setOpen(false)}
+                className="px-4 py-3 text-sm font-medium rounded-lg hover:bg-secondary"
+              >
+                About
+              </Link>
+
+              <Link
+                to="/softwares"
+                onClick={() => setOpen(false)}
+                className="px-4 py-3 text-sm font-medium rounded-lg hover:bg-secondary flex items-center gap-2"
+              >
+                <Cpu className="h-4 w-4" /> Softwares
+              </Link>
+
+              <Link
+                to="/services"
+                onClick={() => setOpen(false)}
+                className="px-4 py-3 text-sm font-medium rounded-lg hover:bg-secondary"
+              >
+                Services
+              </Link>
+              <Link
+                to="/products"
+                onClick={() => setOpen(false)}
+                className="px-4 py-3 text-sm font-medium rounded-lg hover:bg-secondary"
+              >
+                Products
+              </Link>
+              <Link
+                to="/portfolio"
+                onClick={() => setOpen(false)}
+                className="px-4 py-3 text-sm font-medium rounded-lg hover:bg-secondary"
+              >
+                Portfolio
+              </Link>
+              <Link
+                to="/contact"
+                onClick={() => setOpen(false)}
+                className="px-4 py-3 text-sm font-medium rounded-lg hover:bg-secondary"
+              >
+                Contact
+              </Link>
+
               <Link
                 to="/contact"
                 onClick={() => setOpen(false)}

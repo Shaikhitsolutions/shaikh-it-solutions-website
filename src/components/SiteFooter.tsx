@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Cpu, Mail, Phone, MapPin, Facebook, Instagram, Linkedin } from "lucide-react";
+import { Cpu, Mail, Phone, MapPin, Facebook, Instagram, Youtube } from "lucide-react";
 import logo from "@/assets/image/logo.png";
 
 export function SiteFooter() {
@@ -30,9 +30,11 @@ export function SiteFooter() {
             <ul className="space-y-2.5 text-sm text-navy-foreground/75">
               <li><Link to="/" className="hover:text-accent transition-colors">Home</Link></li>
               <li><Link to="/about" className="hover:text-accent transition-colors">About</Link></li>
+              <li><Link to="/softwares" className="hover:text-accent transition-colors">Softwares</Link></li>
               <li><Link to="/services" className="hover:text-accent transition-colors">Services</Link></li>
               <li><Link to="/portfolio" className="hover:text-accent transition-colors">Portfolio</Link></li>
               <li><Link to="/contact" className="hover:text-accent transition-colors">Contact</Link></li>
+                
             </ul>
           </div>
 
@@ -65,18 +67,42 @@ export function SiteFooter() {
 Serving Clients Across India 🇮🇳</span>
               </li>
             </ul>
-            <div className="flex gap-3 mt-5">
-              {[Facebook, Instagram, Linkedin].map((Icon, i) => (
-                <a key={i} href="#" className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 hover:bg-accent transition-colors">
-                  <Icon className="h-4 w-4" />
-                </a>
-              ))}
+           <div className="flex gap-3 mt-5">
+              <a 
+                href="https://www.facebook.com/profile.php?id=61592084420776" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 hover:bg-accent transition-colors"
+              >
+                <Facebook className="h-4 w-4" />
+              </a>
+
+              <a 
+                href="https://www.instagram.com/shaikh.it_solutions?igsi=MTZ3aWl3ajdpZDl2ZQ==" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 hover:bg-accent transition-colors"
+              >
+                <Instagram className="h-4 w-4" />
+              </a>
+
+{/* YouTube */}
+              <a 
+                href="https://youtube.com/@Shaikh.ITSolutions" 
+                target="_blank" 
+                rel="noopener noreferrer" 
+                className="grid h-9 w-9 place-items-center rounded-lg bg-white/5 hover:bg-accent transition-colors"
+                title="YouTube"
+              >
+                <Youtube className="h-4 w-4" />
+              </a>
+              
             </div>
           </div>
         </div>
 
         <div className="mt-12 pt-8 border-t border-white/10 flex flex-col sm:flex-row justify-between gap-4 text-sm text-navy-foreground/60">
-          <p>&copy; {new Date().getFullYear()} © 2026 Shaikh.IT Solutions. All rights reserved.
+          <p>&copy; {new Date().getFullYear()} Shaikh.IT Solutions. All rights reserved.
 
 Founded & Managed by Shahid Shaikh</p>
           <p>Crafted with Precision, Innovation & Passion
